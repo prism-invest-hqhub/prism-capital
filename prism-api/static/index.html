@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="棱镜">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>棱镜 Prism</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#0a0a1a;--card:#12122a;--card-hover:#1a1a3a;
+            --border:#2a2a4a;--primary:#6c5ce7;--primary-light:#a29bfe;
+            --accent:#00cec9;--red:#ff6b6b;--green:#51cf66;
+            --text:#e8e8f0;--text-dim:#8888aa;--text-dimmer:#555577;
+            --radius:16px;--safe-top:env(safe-area-inset-top,0px);
+            --safe-bottom:env(safe-area-inset-bottom,0px)
+        }
+        body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+        .login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;background:radial-gradient(ellipse at top,#1a1a4a 0%,var(--bg) 70%)}
+        .login-logo{width:100px;height:100px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:24px;box-shadow:0 8px 32px rgba(108,92,231,0.3)}
+        .login-title{font-size:32px;font-weight:700;background:linear-gradient(135deg,var(--primary-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .login-sub{color:var(--text-dim);font-size:14px;margin-bottom:40px}
+        .login-input{width:100%;max-width:360px;padding:16px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;outline:none;margin-bottom:16px}
+        .login-input:focus{border-color:var(--primary)}
+        .login-input::placeholder{color:var(--text-dimmer)}
+        .login-btn{width:100%;max-width:360px;padding:16px;background:linear-gradient(135deg,var(--primary),#5a4bd1);border:none;border-radius:12px;color:white;font-size:16px;font-weight:600;cursor:pointer}
+        .login-btn:active{transform:scale(0.98);opacity:0.9}
+        .login-hint{color:var(--text-dimmer);font-size:12px;margin-top:16px;text-align:center}
+        .app{display:none;padding-top:calc(60px + var(--safe-top));padding-bottom:calc(80px + var(--safe-bottom))}
+        .top-bar{position:fixed;top:0;left:0;right:0;height:calc(60px + var(--safe-top));padding-top:var(--safe-top);background:rgba(10,10,26,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding-left:20px;padding-right:20px;z-index:100;border-bottom:1px solid rgba(42,42,74,0.5)}
+        .top-bar-logo{font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--primary-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .top-bar-time{color:var(--text-dim);font-size:13px}
+        .search-bar{margin:12px 16px;position:relative}
+        .search-input{width:100%;padding:12px 16px 12px 44px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;outline:none}
+        .search-input:focus{border-color:var(--primary)}
+        .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dimmer);font-size:18px}
+        .tab-bar{position:fixed;bottom:0;left:0;right:0;height:calc(80px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:rgba(10,10,26,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:space-around;align-items:center;border-top:1px solid rgba(42,42,74,0.5);z-index:100}
+        .tab-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-dimmer);font-size:11px;cursor:pointer;padding:8px 16px;-webkit-tap-highlight-color:transparent}
+        .tab-item.active{color:var(--primary-light)}
+        .tab-icon{font-size:24px}
+        .section{display:none;padding:0 16px}
+        .section.active{display:block}
+        .section-title{font-size:18px;font-weight:700;margin:20px 0 12px}
+        .index-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .index-card{background:var(--card);border-radius:var(--radius);padding:16px;border:1px solid var(--border)}
+        .index-card:active{background:var(--card-hover)}
+        .index-name{font-size:13px;color:var(--text-dim);margin-bottom:4px}
+        .index-value{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+        .index-change{font-size:13px;font-weight:600;margin-top:4px}
+        .up{color:var(--red)}.down{color:var(--green)}
+        .quote-card{background:var(--card);border-radius:var(--radius);padding:20px;border:1px solid var(--border);margin-bottom:12px}
+        .quote-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+        .quote-name{font-size:20px;font-weight:700}
+        .quote-code{font-size:13px;color:var(--text-dim)}
+        .quote-price{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}
+        .quote-details{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+        .quote-detail-item{text-align:center;padding:8px;background:rgba(255,255,255,0.03);border-radius:8px}
+        .quote-detail-label{font-size:11px;color:var(--text-dimmer);margin-bottom:4px}
+        .quote-detail-value{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+        .bond-table{width:100%;border-collapse:collapse}
+        .bond-table th{font-size:11px;color:var(--text-dimmer);text-align:left;padding:8px 6px;border-bottom:1px solid var(--border);font-weight:500;position:sticky;top:0;background:var(--bg)}
+        .bond-table td{font-size:13px;padding:10px 6px;border-bottom:1px solid rgba(42,42,74,0.3);font-variant-numeric:tabular-nums}
+        .bond-table tr:active{background:var(--card-hover)}
+        .bond-rank{color:var(--primary-light);font-weight:700}
+        .bond-rating{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(108,92,231,0.15);color:var(--primary-light)}
+        .bond-rating.aaa{background:rgba(0,206,201,0.15);color:var(--accent)}
+        .bond-rating.aa{background:rgba(108,92,231,0.15);color:var(--primary-light)}
+        .settings-item{background:var(--card);border-radius:var(--radius);padding:16px 20px;border:1px solid var(--border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+        .settings-label{font-size:15px}
+        .settings-value{color:var(--text-dim);font-size:13px}
+        .logout-btn{width:100%;padding:14px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:12px;color:var(--red);font-size:15px;font-weight:600;cursor:pointer;margin-top:20px}
+        .loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text-dimmer)}
+        .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-right:10px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .empty-state{text-align:center;padding:60px 20px;color:var(--text-dimmer)}
+        .empty-icon{font-size:48px;margin-bottom:16px}
+        .toast{position:fixed;top:calc(80px + var(--safe-top));left:50%;transform:translateX(-50%) translateY(-20px);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:14px;z-index:200;opacity:0;transition:all .3s;pointer-events:none}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        .toast.error{border-color:rgba(255,107,107,0.3);color:var(--red)}
+        .toast.success{border-color:rgba(81,207,102,0.3);color:var(--green)}
+        .refresh-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--primary-light);font-size:13px;cursor:pointer;margin:8px 0}
+        .refresh-btn:active{background:var(--card-hover)}
+    </style>
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+    <div class="login-logo">🔷</div>
+    <div class="login-title">棱镜</div>
+    <div class="login-sub">Prism Capital · 投资数据终端</div>
+    <input type="password" class="login-input" id="tokenInput" placeholder="输入访问 Token">
+    <button class="login-btn" onclick="doLogin()">进入棱镜</button>
+    <div class="login-hint">仅限授权用户 · External $19/mo</div>
+</div>
+
+<div class="app" id="mainApp">
+    <div class="top-bar">
+        <div class="top-bar-logo">🔷 棱镜</div>
+        <div class="top-bar-time" id="clock"></div>
+    </div>
+    <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="输入股票代码或名称...">
+    </div>
+    <div class="section active" id="sectionIndex">
+        <div class="section-title">📊 核心指数</div>
+        <button class="refresh-btn" onclick="loadIndices()">🔄 刷新</button>
+        <div class="index-grid" id="indexGrid"><div class="loading"><div class="spinner"></div>加载中...</div></div>
+    </div>
+    <div class="section" id="sectionQuote">
+        <div class="section-title">📈 实时行情</div>
+        <div id="quoteContent">
+            <div class="empty-state"><div class="empty-icon">🔍</div><div>搜索股票代码查看行情</div><div style="margin-top:8px;font-size:12px;color:var(--text-dimmer)">如 sh600519、sz000001</div></div>
+        </div>
+    </div>
+    <div class="section" id="sectionBond">
+        <div class="section-title">💰 可转债双低排名</div>
+        <button class="refresh-btn" onclick="loadBonds()">🔄 刷新</button>
+        <div id="bondContent"><div class="loading"><div class="spinner"></div>加载中...</div></div>
+    </div>
+    <div class="section" id="sectionSettings">
+        <div class="section-title">⚙️ 设置</div>
+        <div class="settings-item"><span class="settings-label">身份</span><span class="settings-value" id="userIdentity">-</span></div>
+        <div class="settings-item"><span class="settings-label">权限</span><span class="settings-value" id="userTier">-</span></div>
+        <div class="settings-item"><span class="settings-label">API</span><span class="settings-value" id="apiStatus">检测中...</span></div>
+        <div class="settings-item"><span class="settings-label">版本</span><span class="settings-value">Prism v2.0</span></div>
+        <button class="logout-btn" onclick="doLogout()">退出登录</button>
+    </div>
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="switchTab('Index',this)"><span class="tab-icon">📊</span><span>指数</span></div>
+        <div class="tab-item" onclick="switchTab('Quote',this)"><span class="tab-icon">📈</span><span>行情</span></div>
+        <div class="tab-item" onclick="switchTab('Bond',this)"><span class="tab-icon">💰</span><span>转债</span></div>
+        <div class="tab-item" onclick="switchTab('Settings',this)"><span class="tab-icon">⚙️</span><span>设置</span></div>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API=window.location.origin;let TOKEN=localStorage.getItem('prism_token')||'',userInfo={};
+function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
+setInterval(updateClock,1e3);updateClock();
+function showToast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.className='toast',2500)}
+async function apiFetch(p,o={}){const r=await fetch(API+p,{...o,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(o.headers||{})}});if(r.status===401||r.status===403){showToast('Token无效','error');doLogout();return null}return r.json()}
+async function doLogin(){const i=document.getElementById('tokenInput').value.trim();if(!i){showToast('请输入Token','error');return}TOKEN=i;try{const h=await apiFetch('/health');if(h&&h.status==='alive'){localStorage.setItem('prism_token',TOKEN);try{const p=JSON.parse(atob(TOKEN.split('.')[1]));userInfo=p;document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp();showToast('登录成功')}else{showToast('连接失败','error')}}catch(e){showToast('无法连接','error')}}
+function doLogout(){TOKEN='';localStorage.removeItem('prism_token');document.getElementById('loginScreen').style.display='flex';document.getElementById('mainApp').style.display='none'}
+function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='block';loadIndices();loadBonds()}
+function switchTab(n,el){document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active')}
+async function loadIndices(){const d=await apiFetch('/index');if(!d||!d.data)return;document.getElementById('indexGrid').innerHTML=d.data.map(i=>{const c=i['涨跌幅'],cls=c>0?'up':c<0?'down':'',a=c>0?'▲':c<0?'▼':'—';return`<div class="index-card"><div class="index-name">${i['名称']}</div><div class="index-value ${cls}">${i['现价'].toFixed(2)}</div><div class="index-change ${cls}">${a} ${Math.abs(c).toFixed(2)}%</div></div>`}).join('')}
+let searchTimer;document.getElementById('searchInput').addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchStock(e.target.value.trim()),500)});
+async function searchStock(q){if(!q)return;const c=document.getElementById('quoteContent');c.innerHTML='<div class="loading"><div class="spinner"></div>查询中...</div>';let code=q;if(!code.match(/^(sh|sz)/i)){if(code.startsWith('6'))code='sh'+code;else if(code.startsWith('0')||code.startsWith('3'))code='sz'+code}const d=await apiFetch('/realtime?codes='+code);if(!d)return;const s=d.data||[];if(!s.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>未找到该股票</div></div>';return}c.innerHTML=s.map(x=>{const ch=x['涨跌幅'],cls=ch>0?'up':ch<0?'down':'';return`<div class="quote-card"><div class="quote-header"><div><div class="quote-name">${x['名称']}</div><div class="quote-code">${x['代码']}</div></div><div class="quote-price ${cls}">${x['现价'].toFixed(2)}</div></div><div class="quote-details"><div class="quote-detail-item"><div class="quote-detail-label">涨跌幅</div><div class="quote-detail-value ${cls}">${ch>0?'+':''}${ch.toFixed(2)}%</div></div><div class="quote-detail-item"><div class="quote-detail-label">涨跌额</div><div class="quote-detail-value ${cls}">${x['涨跌额'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">今开</div><div class="quote-detail-value">${x['今开'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">最高</div><div class="quote-detail-value">${x['最高'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">最低</div><div class="quote-detail-value">${x['最低'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">昨收</div><div class="quote-detail-value">${x['昨收'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交量</div><div class="quote-detail-value">${fmtVol(x['成交量'])}</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交额</div><div class="quote-detail-value">${fmtAmt(x['成交额'])}</div></div><div class="quote-detail-item"><div class="quote-detail-label">换手率</div><div class="quote-detail-value">${x['换手率'].toFixed(2)}%</div></div></div></div>`}).join('')}
+function fmtVol(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(1)+'万':v+''}
+function fmtAmt(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(1)+'万':v.toFixed(0)}
+async function loadBonds(){const d=await apiFetch('/bond/double-low?top=30');if(!d)return;const c=document.getElementById('bondContent'),b=d.data||[];if(!b.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无数据</div></div>';return}let h='<table class="bond-table"><thead><tr><th>#</th><th>名称</th><th>双低</th><th>价格</th><th>评级</th></tr></thead><tbody>';b.forEach((x,i)=>{const r=x['评级']||'';let rc='bond-rating';if(r==='AAA')rc+=' aaa';else if(r==='AA'||r==='AA+')rc+=' aa';h+=`<tr><td class="bond-rank">${i+1}</td><td>${x['名称']}</td><td>${x['双低值']?x['双低值'].toFixed(2):'-'}</td><td>${x['价格']?x['价格'].toFixed(2):'-'}</td><td><span class="${rc}">${r}</span></td></tr>`});h+='</tbody></table>';c.innerHTML=h}
+if(TOKEN){apiFetch('/health').then(h=>{if(h&&h.status==='alive'){try{const p=JSON.parse(atob(TOKEN.split('.')[1]));document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp()}else{localStorage.removeItem('prism_token');TOKEN=''}}).catch(()=>{localStorage.removeItem('prism_token');TOKEN=''})}
+</script>
+</body>
+</html>
