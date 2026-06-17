@@ -453,6 +453,7 @@ def get_bond_double_low(
 
 
 def _fetch_bond_batch(batch: List[str], listed_df: 'DataFrame') -> List[Dict]:
+    import pandas as pd
     """批量获取可转债行情"""
     bonds = []
     try:
