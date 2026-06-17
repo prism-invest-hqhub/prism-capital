@@ -27,14 +27,14 @@ BRAIN_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BRAIN_DIR)
 
 from prism_brain import PrismMemory, PrismBrain, init_default_memories
-from prism_reasoner import PrismReasoner
+from prism_reasoner import PrismRouter
 
 brain_router = APIRouter(prefix="/brain", tags=["brain"])
 
 # 全局实例
 memory = PrismMemory()
 brain = PrismBrain(memory=memory)
-reasoner = PrismReasoner()
+reasoner = PrismRouter()
 
 # ============ 数据模型 ============
 
@@ -131,14 +131,16 @@ def chat(req: ChatRequest):
     think_result = brain.think(req.message)
     memories = think_result["recalled_memories"]
     
-    if req.use_llm and reasoner.api_key:
-        # 调用LLM推理
-        reply = reasoner.chat(req.message, memories=memories)
+    if req.use_llm and reasoner._available_models():
+        # 调用LLM推理（多模型路由）
+        reply, call_meta = reasoner.chat(req.message, memories=memories)
         return {
             "reply": reply,
             "decision_type": think_result["decision_type"],
             "memories_used": think_result["memory_count"],
-            "llm_used": True
+            "llm_used": True,
+            "model_used": call_meta.get("model", "unknown"),
+            "cost_yuan": call_meta.get("cost_yuan", 0),
         }
     else:
         # 只返回记忆召回结果
@@ -148,7 +150,7 @@ def chat(req: ChatRequest):
             "memories_used": think_result["memory_count"],
             "memories": think_result["recalled_memories"],
             "llm_used": False,
-            "note": "LLM未启用，仅返回记忆召回。设置PRISM_LLM_KEY环境变量启用LLM推理。"
+            "note": "LLM未启用，仅返回记忆召回。设置API Key环境变量启用LLM推理（如DEEPSEEK_API_KEY）。"
         }
 
 # ============ WebSocket ============
@@ -168,14 +170,16 @@ async def websocket_chat(websocket: WebSocket):
             think_result = brain.think(user_msg)
             memories = think_result["recalled_memories"]
             
-            if use_llm and reasoner.api_key:
-                # 异步调LLM
-                reply = await asyncio.to_thread(reasoner.chat, user_msg, memories)
+            if use_llm and reasoner._available_models():
+                # 异步调LLM（多模型路由）
+                reply, call_meta = await asyncio.to_thread(reasoner.chat, user_msg, memories)
                 response = {
                     "type": "reply",
                     "content": reply,
                     "decision_type": think_result["decision_type"],
                     "memories_used": think_result["memory_count"],
+                    "model_used": call_meta.get("model", "unknown"),
+                    "cost_yuan": call_meta.get("cost_yuan", 0),
                 }
             else:
                 # 只返回记忆分析
@@ -206,12 +210,18 @@ async def websocket_chat(websocket: WebSocket):
 def brain_home():
     """大脑状态页"""
     stats = memory.stats()
+    router_status = reasoner.status()
     return {
         "name": "棱镜大脑",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "status": "alive",
         "memory_stats": stats,
-        "llm_status": "configured" if reasoner.api_key else "no_api_key",
-        "llm_model": reasoner.model,
-        "endpoints": ["/brain/chat", "/brain/ws", "/brain/think", "/brain/memories", "/brain/stats"]
+        "router": router_status,
+        "llm_status": f"{router_status['available_models']} models available" if router_status['available_models'] > 0 else "no_api_key",
+        "endpoints": ["/brain/chat", "/brain/ws", "/brain/think", "/brain/memories", "/brain/stats", "/brain/router"]
     }
+
+@brain_router.get("/router")
+def router_status():
+    """多模型路由器状态"""
+    return reasoner.status()
