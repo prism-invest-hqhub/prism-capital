@@ -18,6 +18,11 @@
   /brain/evolve        POST  触发自我进化
   /brain/evolve/auto   GET   自动调参建议
   /brain/agents        GET   多Agent协调器状态
+  /brain/auto/screen   POST  自动可转债筛选闭环
+  /brain/auto/etf      POST  自动ETF分析闭环
+  /brain/auto/streak   GET   防守连续天数
+  /brain/backtest      GET   策略回测
+  /brain/backtest/{type} GET  单类回测
 """
 
 import os
@@ -26,7 +31,7 @@ import json
 import asyncio
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # 导入棱镜大脑模块
 BRAIN_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -34,7 +39,7 @@ sys.path.insert(0, BRAIN_DIR)
 
 from prism_brain import PrismMemory, PrismBrain, init_default_memories
 from prism_reasoner import PrismRouter
-from prism_evolution import DecisionJournal, SelfEvolver, MultiAgentCoordinator
+from prism_evolution import DecisionJournal, SelfEvolver, MultiAgentCoordinator, AutoDecisionLoop, StrategyBacktester
 
 brain_router = APIRouter(prefix="/brain", tags=["brain"])
 
@@ -45,6 +50,8 @@ reasoner = PrismRouter()
 journal = DecisionJournal()
 evolver = SelfEvolver(journal, memory=memory)
 coordinator = MultiAgentCoordinator()
+auto_loop = AutoDecisionLoop(journal)
+backtester = StrategyBacktester(journal)
 
 # ============ 数据模型 ============
 
@@ -286,9 +293,58 @@ def brain_home():
         "llm_status": f"{router_status['available_models']} models available" if router_status['available_models'] > 0 else "no_api_key",
         "endpoints": ["/brain/chat", "/brain/ws", "/brain/think", "/brain/memories", 
                       "/brain/stats", "/brain/router", "/brain/journal", 
-                      "/brain/evolve", "/brain/evolve/auto", "/brain/agents"],
+                      "/brain/evolve", "/brain/evolve/auto", "/brain/agents",
+                      "/brain/auto/screen", "/brain/auto/etf", "/brain/auto/streak",
+                      "/brain/backtest", "/brain/backtest/{type}"],
     }
 
 @brain_router.get("/router")
 def router_status():
     return reasoner.status()
+
+
+# ============ 自动决策闭环端点 ============
+
+class BondScreenResult(BaseModel):
+    total: int = Field(..., description="扫描总数")
+    passed: int = Field(..., description="通过筛选数")
+    min_double_low: float = Field(..., description="最低双低值")
+
+class ETFAnalysisInput(BaseModel):
+    code: str = Field(..., description="ETF代码")
+    analysis: dict = Field(..., description="技术分析结果")
+
+@brain_router.post("/auto/screen")
+def auto_bond_screen(result: BondScreenResult):
+    """自动可转债筛选闭环 — 记录筛选结果，自动判定防守正确性"""
+    did = auto_loop.record_bond_screening(result.dict())
+    streak = auto_loop.screening_streak()
+    return {
+        "decision_id": did,
+        "streak": streak,
+        "status": "recorded"
+    }
+
+@brain_router.post("/auto/etf")
+def auto_etf_analysis(input: ETFAnalysisInput):
+    """自动ETF分析闭环 — 记录技术分析结果"""
+    did = auto_loop.record_etf_analysis(input.code, input.analysis)
+    return {
+        "decision_id": did,
+        "status": "recorded"
+    }
+
+@brain_router.get("/auto/streak")
+def get_streak():
+    """防守连续天数 — 可转债连续无符合标的天数"""
+    return auto_loop.screening_streak()
+
+@brain_router.get("/backtest")
+def backtest_all():
+    """策略回测 — 所有决策类型的准确率和校准"""
+    return backtester.backtest_all()
+
+@brain_router.get("/backtest/{decision_type}")
+def backtest_type(decision_type: str):
+    """单类策略回测"""
+    return backtester.backtest_type(decision_type)
