@@ -33,9 +33,9 @@
         .search-input:focus{border-color:var(--primary)}
         .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dimmer);font-size:18px}
         .tab-bar{position:fixed;bottom:0;left:0;right:0;height:calc(80px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:rgba(10,10,26,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:space-around;align-items:center;border-top:1px solid rgba(42,42,74,0.5);z-index:100}
-        .tab-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-dimmer);font-size:10px;cursor:pointer;padding:6px 8px;-webkit-tap-highlight-color:transparent}
+        .tab-item{display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--text-dimmer);font-size:9px;cursor:pointer;padding:4px 4px;-webkit-tap-highlight-color:transparent}
         .tab-item.active{color:var(--primary-light)}
-        .tab-icon{font-size:22px}
+        .tab-icon{font-size:20px}
         .section{display:none;padding:0 16px}
         .section.active{display:block}
         .section-title{font-size:18px;font-weight:700;margin:20px 0 12px}
@@ -87,6 +87,34 @@
         .position-high{color:var(--red)}
         .position-mid{color:var(--yellow)}
         .position-low{color:var(--green)}
+        /* 简报样式 */
+        .brief-header{text-align:center;margin:16px 0 20px}
+        .brief-date{font-size:15px;color:var(--text-dim);margin-bottom:4px}
+        .brief-title{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--primary-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .brief-index-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+        .brief-index-card{background:var(--card);border-radius:12px;padding:14px 10px;border:1px solid var(--border);text-align:center}
+        .brief-index-name{font-size:11px;color:var(--text-dim);margin-bottom:6px}
+        .brief-index-value{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+        .brief-index-change{font-size:13px;font-weight:600;margin-top:4px}
+        .brief-card{background:var(--card);border-radius:var(--radius);padding:16px;border:1px solid var(--border);margin-bottom:12px}
+        .brief-card-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+        .brief-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(42,42,74,0.3)}
+        .brief-row:last-child{border-bottom:none}
+        .brief-label{font-size:13px;color:var(--text-dimmer)}
+        .brief-value{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+        .brief-value-large{font-size:24px;font-weight:700}
+        .brief-value-accent{color:var(--accent)}
+        .brief-badge{display:inline-block;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:600}
+        .brief-badge.green{background:rgba(81,207,102,0.15);color:var(--green)}
+        .brief-badge.yellow{background:rgba(255,212,59,0.15);color:var(--yellow)}
+        .brief-badge.red{background:rgba(255,107,107,0.15);color:var(--red)}
+        .brief-tech-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+        .brief-tech-item{background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;text-align:center}
+        .brief-tech-label{font-size:11px;color:var(--text-dimmer);margin-bottom:6px}
+        .brief-tech-value{font-size:18px;font-weight:700}
+        .brief-footer{text-align:center;padding:16px;color:var(--text-dimmer);font-size:11px}
+        .brief-streak{display:flex;align-items:center;gap:8px}
+        .brief-streak-num{font-size:32px;font-weight:700;color:var(--accent)}
         .settings-item{background:var(--card);border-radius:var(--radius);padding:16px 20px;border:1px solid var(--border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
         .settings-label{font-size:15px}
         .settings-value{color:var(--text-dim);font-size:13px}
@@ -165,6 +193,13 @@
         <div class="section-title">📉 技术分析</div>
         <div id="analyzeContent"><div class="empty-state"><div class="empty-icon">📊</div><div>输入股票代码查看技术分析</div><div style="margin-top:8px;font-size:12px;color:var(--text-dimmer)">在顶部搜索框输入股票代码</div></div></div>
     </div>
+    <div class="section" id="sectionBrief">
+        <div class="brief-header">
+            <div class="brief-date" id="briefDate"></div>
+            <div class="brief-title">📋 今日投资简报</div>
+        </div>
+        <div id="briefContent"><div class="loading"><div class="spinner"></div>加载中...</div></div>
+    </div>
     <div class="section" id="sectionChat">
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages">
@@ -182,7 +217,7 @@
         <div class="settings-item"><span class="settings-label">权限</span><span class="settings-value" id="userTier">-</span></div>
         <div class="settings-item"><span class="settings-label">API</span><span class="settings-value" id="apiStatus">检测中...</span></div>
         <div class="settings-item"><span class="settings-label">Brain</span><span class="settings-value" id="brainStatus">-</span></div>
-        <div class="settings-item"><span class="settings-label">版本</span><span class="settings-value">Prism v3.1.0</span></div>
+        <div class="settings-item"><span class="settings-label">版本</span><span class="settings-value">Prism v3.2.0</span></div>
         <button class="logout-btn" onclick="doLogout()">退出登录</button>
     </div>
     <div class="tab-bar">
@@ -190,6 +225,7 @@
         <div class="tab-item" onclick="switchTab('Quote',this)"><span class="tab-icon">📈</span><span>行情</span></div>
         <div class="tab-item" onclick="switchTab('Bond',this)"><span class="tab-icon">💰</span><span>转债</span></div>
         <div class="tab-item" onclick="switchTab('Analyze',this)"><span class="tab-icon">📉</span><span>分析</span></div>
+        <div class="tab-item" onclick="switchTab('Brief',this)"><span class="tab-icon">📋</span><span>简报</span></div>
         <div class="tab-item" onclick="switchTab('Chat',this)"><span class="tab-icon">💬</span><span>聊天</span></div>
         <div class="tab-item" onclick="switchTab('Settings',this)"><span class="tab-icon">⚙️</span><span>设置</span></div>
     </div>
@@ -204,7 +240,7 @@ async function apiFetch(p,o={}){const r=await fetch(API+p,{...o,headers:{'Author
 async function doLogin(){const i=document.getElementById('tokenInput').value.trim();if(!i){showToast('请输入Token','error');return}TOKEN=i;try{const h=await apiFetch('/health');if(h&&h.status==='alive'){localStorage.setItem('prism_token',TOKEN);try{const p=JSON.parse(atob(TOKEN.split('.')[1]));userInfo=p;document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp();showToast('登录成功')}else{showToast('连接失败','error')}}catch(e){showToast('无法连接','error')}}
 function doLogout(){TOKEN='';localStorage.removeItem('prism_token');document.getElementById('loginScreen').style.display='flex';document.getElementById('mainApp').style.display='none'}
 function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='block';loadIndices();loadBonds();checkBrain()}
-function switchTab(n,el){currentTab=n;document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');document.getElementById('searchBar').style.display=n==='Chat'?'none':'block';const si=document.getElementById('searchInput');if(n==='Analyze'){si.placeholder='输入股票代码查看技术分析...'}else if(n==='Quote'){si.placeholder='输入股票代码或名称...'}else if(n==='Index'||n==='Bond'){si.placeholder='输入股票代码或名称...'}if(n==='Chat')setTimeout(()=>document.getElementById('chatInput').focus(),100)}
+function switchTab(n,el){currentTab=n;document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');const noSearchTabs=['Chat','Brief','Settings'];document.getElementById('searchBar').style.display=noSearchTabs.includes(n)?'none':'block';const si=document.getElementById('searchInput');if(n==='Analyze'){si.placeholder='输入股票代码查看技术分析...'}else if(n==='Quote'){si.placeholder='输入股票代码或名称...'}else if(n==='Index'||n==='Bond'){si.placeholder='输入股票代码或名称...'}if(n==='Chat')setTimeout(()=>document.getElementById('chatInput').focus(),100);if(n==='Brief')loadBrief()}
 async function checkBrain(){try{const s=await apiFetch('/brain/');if(s&&s.status==='alive'){const r=s.router||{};document.getElementById('brainStatus').textContent='🟢 '+(r.available||0)+'模型可用';const info=document.getElementById('chatHeaderInfo');info.innerHTML=r.available>0?'<span class="dot-online"></span><span>'+(r.available||0)+'模型在线 · V4 Flash</span>':'<span class="dot-offline"></span><span>无LLM(需充值)</span>'}else{document.getElementById('brainStatus').textContent='🔴 离线'}}catch(e){document.getElementById('brainStatus').textContent='❌ 错误'}}
 function appendMsg(role,html){const d=document.getElementById('chatMessages');const m=document.createElement('div');m.className='chat-msg '+role;m.innerHTML=html;d.appendChild(m);d.scrollTop=d.scrollHeight}
 function showTyping(){const d=document.getElementById('chatMessages');const m=document.createElement('div');m.className='chat-typing';m.id='typingIndicator';m.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div><span>棱镜思考中...</span>';d.appendChild(m);d.scrollTop=d.scrollHeight}
@@ -221,6 +257,109 @@ function fmtVol(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed
 function fmtAmt(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(1)+'万':v.toFixed(0)}
 function getPremiumClass(p){if(p===undefined||p===null)return'';if(p<20)return'premium-green';if(p<=40)return'premium-yellow';return'premium-red'}
 async function loadBonds(){const d=await apiFetch('/bond/double-low?top=30');if(!d)return;const c=document.getElementById('bondContent'),b=d.data||[];if(!b.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无数据</div></div>';return}let h='<table class="bond-table"><thead><tr><th>#</th><th>名称</th><th>价格</th><th>双低</th><th>溢价率</th><th>成交额</th><th>评级</th></tr></thead><tbody>';b.forEach((x,i)=>{const r=x['评级']||'';let rc='bond-rating';if(r==='AAA')rc+=' aaa';else if(r==='AA'||r==='AA+')rc+=' aa';const premium=x['溢价率'];const pc=getPremiumClass(premium);h+='<tr><td class="bond-rank">'+(i+1)+'</td><td class="bond-name">'+escHtml(x['名称']||'')+'</td><td>'+(x['价格']?x['价格'].toFixed(2):'-')+'</td><td>'+(x['双低值']?x['双低值'].toFixed(2):'-')+'</td><td class="'+pc+'">'+(premium!==undefined&&premium!==null?premium.toFixed(2)+'%':'-')+'</td><td>'+fmtAmt(x['成交额']||0)+'</td><td><span class="'+rc+'">'+escHtml(r)+'</span></td></tr>'});h+='</tbody></table>';c.innerHTML=h}
+
+// 简报功能
+async function loadBrief(){
+    const c=document.getElementById('briefContent');
+    c.innerHTML='<div class="loading"><div class="spinner"></div>加载中...</div>';
+    const d=await apiFetch('/daily-brief');
+    if(!d){
+        c.innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>简报加载失败</div></div>';
+        return;
+    }
+    const data=d.data||d;
+    const now=new Date();
+    document.getElementById('briefDate').textContent=now.toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'long'});
+    
+    let html='';
+    
+    // 指数卡片
+    if(data.indices&&data.indices.length>0){
+        html+='<div class="brief-index-grid">';
+        data.indices.forEach(idx=>{
+            const ch=idx.change||0;
+            const cls=ch>0?'up':ch<0?'down':'';
+            const arrow=ch>0?'▲':ch<0?'▼':'—';
+            html+='<div class="brief-index-card"><div class="brief-index-name">'+escHtml(idx.name||'')+'</div><div class="brief-index-value '+cls+'">'+((idx.value||0)).toFixed(2)+'</div><div class="brief-index-change '+cls+'">'+arrow+' '+Math.abs(ch).toFixed(2)+'%</div></div>';
+        });
+        html+='</div>';
+    }
+    
+    // 可转债筛选结果
+    if(data.bond_summary){
+        const bs=data.bond_summary;
+        let badgeCls='green',badgeText='维持防守';
+        if(bs.passed>0){
+            badgeCls=bs.passed>=5?'red':'yellow';
+            badgeText=bs.passed>=5?'建议出击':'注意观察';
+        }
+        html+='<div class="brief-card"><div class="brief-card-title">💰 可转债筛选</div>';
+        html+='<div class="brief-row"><span class="brief-label">候选总数</span><span class="brief-value">'+((bs.total||0))+'</span></div>';
+        html+='<div class="brief-row"><span class="brief-label">通过双低筛选</span><span class="brief-value brief-value-large '+(bs.passed>0?'up':'down')+'">'+((bs.passed||0))+'</span></div>';
+        if(bs.min_double_low!==undefined){
+            html+='<div class="brief-row"><span class="brief-label">最低双低值</span><span class="brief-value">'+((bs.min_double_low||0)).toFixed(2)+'</span></div>';
+        }
+        html+='<div class="brief-row"><span class="brief-label">操作建议</span><span class="brief-value"><span class="brief-badge '+badgeCls+'">'+badgeText+'</span></span></div>';
+        if(bs.conclusion){
+            html+='<div class="brief-row"><span class="brief-label">结论</span><span class="brief-value" style="font-size:13px;color:var(--text-dim)">'+escHtml(bs.conclusion)+'</span></div>';
+        }
+        html+='</div>';
+    }
+    
+    // 沪深300ETF技术分析
+    if(data.etf_analysis){
+        const ea=data.etf_analysis;
+        const rsi=ea.rsi||0;
+        let rsiCls='rsi-neutral',rsiState='中性';
+        if(rsi>70){rsiCls='rsi-overbought';rsiState='超买⚠️';}
+        else if(rsi<30){rsiCls='rsi-oversold';rsiState='超卖📈';}
+        
+        let macdCls='rsi-neutral',macdState='中性';
+        if(ea.macd_trend==='up'||ea.macd_histogram>0){macdCls='macd-up';macdState='多头✅';}
+        else{macdCls='macd-down';macdState='空头⚠️';}
+        
+        let bollPos='中轨',bollCls='rsi-neutral';
+        if(ea.boll_position==='upper'||ea.price>ea.boll_upper){bollCls='position-high';bollPos='上轨⚠️';}
+        else if(ea.boll_position==='lower'||ea.price<ea.boll_lower){bollCls='position-low';bollPos='下轨📈';}
+        else if(ea.price>ea.boll_mid){bollCls='position-mid';bollPos='中上';}
+        else{bollPos='中下';}
+        
+        html+='<div class="brief-card"><div class="brief-card-title">📊 沪深300ETF技术分析</div>';
+        html+='<div class="brief-tech-grid">';
+        html+='<div class="brief-tech-item"><div class="brief-tech-label">RSI(14)</div><div class="brief-tech-value '+rsiCls+'">'+rsi.toFixed(1)+'<br><span style="font-size:11px">'+rsiState+'</span></div></div>';
+        html+='<div class="brief-tech-item"><div class="brief-tech-label">MACD</div><div class="brief-tech-value '+macdCls+'">'+macdState+'</div></div>';
+        html+='<div class="brief-tech-item"><div class="brief-tech-label">布林带</div><div class="brief-tech-value '+bollCls+'">'+bollPos+'</div></div>';
+        html+='</div>';
+        html+='</div>';
+    }
+    
+    // 防守连续天数
+    if(data.defense_streak!==undefined){
+        const streak=data.defense_streak||0;
+        let streakBadge='green',streakText='初期';
+        if(streak>=10)streakBadge='red',streakText='连续防守中';
+        else if(streak>=5)streakBadge='yellow',streakText='持续防守';
+        html+='<div class="brief-card"><div class="brief-card-title">🛡️ 防守状态</div>';
+        html+='<div class="brief-row"><span class="brief-label">连续防守天数</span><span class="brief-value"><span class="brief-streak"><span class="brief-streak-num">'+streak+'</span><span class="brief-badge '+streakBadge+'">'+streakText+'</span></span></span></div>';
+        if(data.defense_conclusion){
+            html+='<div class="brief-row"><span class="brief-label">结论</span><span class="brief-value" style="font-size:13px;color:var(--text-dim)">'+escHtml(data.defense_conclusion)+'</span></div>';
+        }
+        html+='</div>';
+    }
+    
+    // 最后更新时间
+    if(data.updated_at){
+        const t=new Date(data.updated_at);
+        html+='<div class="brief-footer">最后更新: '+t.toLocaleString('zh-CN')+'</div>';
+    }
+    
+    if(!html){
+        c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无简报数据</div></div>';
+        return;
+    }
+    c.innerHTML=html;
+}
+
 if(TOKEN){apiFetch('/health').then(h=>{if(h&&h.status==='alive'){try{const p=JSON.parse(atob(TOKEN.split('.')[1]));document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp()}else{localStorage.removeItem('prism_token');TOKEN=''}}).catch(()=>{localStorage.removeItem('prism_token');TOKEN=''})}
 </script>
 </body>
