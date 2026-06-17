@@ -1,0 +1,19 @@
+<!DOCTYPE html><html><body>
+<script>
+const params = new URLSearchParams(window.location.search);
+const key = params.get('key');
+if (key) {
+  fetch('/brain/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0aGUtZ3JlYXRlc3QtZW50cmVwcmVuZXVyIiwicm9sZSI6ImFkbWluIiwic2NvcGUiOiJyZWFkIHdyaXRlIGFkbWluIiwidGllciI6Im93bmVyIiwicmF0ZV9saW1pdCI6LTEsImlhdCI6MTc4MTYyNjE5MCwiZXhwIjo0OTM1MjI2MTkwfQ.tKJCBeCXhFM2Bj0_-GYyDu1oanHO_gOh0SrkUH6Cyjg'},
+    body: JSON.stringify({message: 'SAVE_KEY:' + key, use_llm: false})
+  }).then(r => r.json()).then(d => {
+    document.title = 'KEY_SAVED:' + d.decision_id;
+    document.body.innerHTML = '<h1>Key Saved!</h1><p>ID: ' + d.decision_id + '</p>';
+  }).catch(e => {
+    document.title = 'KEY_ERROR:' + e.message;
+    document.body.innerHTML = '<h1>Error</h1><p>' + e.message + '</p>';
+  });
+}
+</script>
+</body></html>
