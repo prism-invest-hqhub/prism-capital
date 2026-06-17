@@ -1,6 +1,6 @@
 #!/bin/bash
 # 棱镜进程守护脚本 — 每60秒检查一次，挂了自动重启
-API_DIR="/app/data/所有对话/主对话/skills/prism-market-data"
+API_DIR="/app/data/所有对话/主对话/prism-deploy/prism-api"
 LOG="/tmp/prism_guard.log"
 
 while true; do
@@ -9,6 +9,7 @@ while true; do
         echo "[$(date)] API down, restarting..." >> $LOG
         pkill -f "uvicorn prism_api" 2>/dev/null
         sleep 1
+        rm -rf ${API_DIR}/__pycache__
         cd $API_DIR && nohup python3 -m uvicorn prism_api:app --host 0.0.0.0 --port 8900 > /tmp/prism_api.log 2>&1 &
         echo "[$(date)] API restarted, PID=$!" >> $LOG
     fi
