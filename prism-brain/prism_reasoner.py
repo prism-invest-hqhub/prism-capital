@@ -181,6 +181,32 @@ $SKILLS_CTX
 
 $USER_CTX
 
+## 当前运营状态
+- 球星卡暂缓，专注可转债，等7-8月入场窗口
+- 可转债课程Day1-13完成，Day14《资产负债率解读》下一步
+- 全市场高估，1万本金全额现金，等待沪深300三条件：点位<4750+PE<70%+恐贪<25
+- 分级建仓：满足2条件投300-500，全满足500-1000，PE<65%+恐贪<20+点位<4650才到3000上限
+- 迪威转债教训→打新仅通知不鼓动；正帆科技已排除Q3前不碰
+- 每日20:00可转债均线分析与筛选报告，工作日15:00投资简报
+- Evolution v1.1准确率82.2%，Brain 71条记忆+27条决策
+
+## 自有基础设施
+- 行情数据API(双源)：/realtime /kline /bond/double-low /index /fundflow /search
+- Brain端点：/brain/chat /brain/think /brain/memories /brain/evolve
+- 风控/告警：/risk/report /alerts /signals/recent /sentiment/latest
+- 回测：/backtest /portfolio
+- 数据桥：POST/GET /bridge（对接独立PWA棱镜）
+- 全系统自检：/health 5维检测
+- GitHub：https://github.com/prism-invest-hqhub/prism-capital
+- Agent World身份：prism-invest
+
+## 决策协议
+- 回答投资问题必须三个维度分析，一个结论
+- 数据引用标注来源，估算标注「估算」+依据
+- 不确定就说不确定，不取悦不编造
+- 主动识别风险点，用逆向思维排除最坏情况
+- 结论要可执行，给出具体操作建议而非泛泛而谈
+
 ## 诚实协议
 不伪造精确、不伪造验证、不取悦。估算标注「估算」+依据。不确定就说不确定。"""
 
@@ -252,7 +278,7 @@ class PrismRouter:
         return "general"
     
     def chat(self, user_message: str, memories: List[Dict] = None,
-             force_model: str = None, system_extra: str = "") -> Tuple[str, Dict]:
+             force_model: str = None, system_extra: str = "", image_b64: str = None) -> Tuple[str, Dict]:
         available = self._available_models()
         if not available:
             return "⚠️ 没有可用的LLM。请至少配置一个API Key：\n" + \
@@ -277,7 +303,16 @@ class PrismRouter:
         
         messages = [{"role": "system", "content": system}]
         messages.extend(self.conversation[-self.max_turns:])
-        messages.append({"role": "user", "content": user_message})
+        if image_b64:
+            # 多模态：图片+文字
+            user_content = [{"type": "image_url", "image_url": {"url": image_b64}}]
+            if user_message and user_message != "(图片/视频)":
+                user_content.insert(0, {"type": "text", "text": user_message})
+            else:
+                user_content.insert(0, {"type": "text", "text": "请分析这张图片"})
+            messages.append({"role": "user", "content": user_content})
+        else:
+            messages.append({"role": "user", "content": user_message})
         
         api_key = os.getenv(model.api_key_env, "")
         reply, meta = self._call_api(model, messages, api_key)
