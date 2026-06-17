@@ -14,7 +14,7 @@
 import json
 import re
 import os
-from coze_workload_identity import requests
+import requests
 
 
 # ============ 实时行情 ============
