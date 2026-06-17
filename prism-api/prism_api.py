@@ -24,6 +24,10 @@ from main import get_realtime, get_index, get_bond_double_low
 # 导入wiki引擎
 from wiki_engine import wiki_router
 
+# 导入大脑API
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "prism-brain"))
+from brain_api import brain_router
+
 app = FastAPI(
     title="棱镜行情数据 API",
     description="Prism Market Data — 三维度，一个结论。A股/可转债/ETF quant-grade data.",
@@ -39,6 +43,9 @@ app.add_middleware(
 
 # 注册wiki路由
 app.include_router(wiki_router)
+
+# 注册大脑路由
+app.include_router(brain_router)
 
 # ============ JWT 鉴权 ============
 
@@ -109,7 +116,7 @@ def root():
         "name": "棱镜行情数据 API",
         "version": "2.0.0",
         "identity": "prism-invest",
-        "endpoints": ["/app", "/wiki", "/realtime", "/index", "/bond/double-low", "/token", "/health"],
+        "endpoints": ["/app", "/wiki", "/brain", "/realtime", "/index", "/bond/double-low", "/token", "/health"],
         "pricing": "$19/month for external access",
     }
 
