@@ -713,3 +713,68 @@ if __name__ == "__main__":
             print(f"ERROR: {b['error']}")
         else:
             print(f"{b['名称']}({b['代码']}): 价格={b['价格']}, 溢价率={b.get('溢价率','?')}, 双低值={b.get('双低值','?')}")
+
+
+def search_stock(keyword: str, limit: int = 10) -> List[Dict]:
+    """
+    按名称/拼音/代码搜索股票
+    使用腾讯smartbox接口
+    
+    参数:
+        keyword: 搜索关键词（中文/拼音/代码均可）
+        limit: 最多返回条数，默认10
+    返回:
+        [{"代码": str, "名称": str, "市场": str, "拼音": str, "类型": str}, ...]
+    """
+    try:
+        url = f"https://smartbox.gtimg.cn/s3/?q={keyword}&t=all"
+        resp = requests.get(url, timeout=TIMEOUT_PRIMARY)
+        if resp.status_code != 200 or not resp.text.strip():
+            return []
+        
+        # 腾讯smartbox返回GBK编码，需要正确解码
+        text = resp.text
+        # 尝试处理Unicode转义
+        if '\\u' in text:
+            text = text.encode('utf-8').decode('unicode_escape')
+        
+        results = []
+        for line in text.strip().split(";"):
+            line = line.strip()
+            if not line or 'v_hint="' not in line:
+                continue
+            # 格式: v_hint="sh~600519~贵州茅台~gzmt~GP-A"
+            try:
+                content = line.split('"')[1]
+                parts = content.split("~")
+                if len(parts) >= 5:
+                    market = parts[0]  # sh/sz/hk/us
+                    code = parts[1]
+                    name = parts[2]
+                    pinyin = parts[3]
+                    stock_type = parts[4]
+                    
+                    type_map = {
+                        "GP-A": "A股",
+                        "GP-B": "B股",
+                        "IN": "指数",
+                        "HK": "港股",
+                        "US": "美股",
+                        "FD": "基金",
+                    }
+                    
+                    results.append({
+                        "代码": f"{market}{code}",
+                        "名称": name,
+                        "市场": market.upper(),
+                        "拼音": pinyin,
+                        "类型": type_map.get(stock_type, stock_type),
+                    })
+            except (IndexError, ValueError):
+                continue
+        
+        return results[:limit]
+    
+    except Exception as e:
+        logger.error(f"搜索股票失败: {keyword} - {e}")
+        return []

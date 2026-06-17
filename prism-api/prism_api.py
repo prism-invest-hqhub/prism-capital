@@ -326,6 +326,23 @@ def api_config():
     }
 
 
+@app.get("/search")
+def api_search(
+    keyword: str = Query(..., description="搜索关键词（名称/拼音/代码）"),
+    limit: int = Query(10, ge=1, le=30, description="最多返回条数"),
+    authorization: str = Header(None),
+):
+    """搜索股票（名称/拼音/代码）"""
+    verify_token(authorization)
+    from main import search_stock
+    results = search_stock(keyword, limit)
+    return {
+        "data": results,
+        "keyword": keyword,
+        "count": len(results)
+    }
+
+
 @app.get("/health")
 def health():
     """健康检查"""
