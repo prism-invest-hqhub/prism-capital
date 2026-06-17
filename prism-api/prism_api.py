@@ -402,6 +402,92 @@ def api_config():
     }
 
 
+@app.get("/system-info", dependencies=[Depends(verify_token)])
+def system_info():
+    """
+    系统全量信息 — 一键获取棱镜完整状态
+    
+    用于：自检、讨论、汇报
+    """
+    import subprocess
+    
+    # Git信息
+    git_info = {}
+    try:
+        result = subprocess.run(
+            ["git", "log", "--oneline", "-5"],
+            capture_output=True, text=True, cwd="/tmp/prism-repo", timeout=5
+        )
+        git_info["recent_commits"] = result.stdout.strip().split("\n") if result.stdout.strip() else []
+        result2 = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, cwd="/tmp/prism-repo", timeout=5
+        )
+        git_info["latest_hash"] = result2.stdout.strip()[:7]
+    except:
+        git_info = {"note": "git not available"}
+    
+    # 运行时长
+    import psutil
+    try:
+        uptime = int(time.time() - psutil.Process().create_time())
+        uptime_str = f"{uptime//3600}h{uptime%3600//60}m"
+    except:
+        uptime_str = "unknown"
+    
+    # Brain信息
+    brain_info = {}
+    try:
+        BRAIN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "prism-brain")
+        sys.path.insert(0, BRAIN_DIR)
+        from prism_brain import PrismMemory
+        from prism_evolution import DecisionJournal, AutoDecisionLoop, StrategyBacktester
+        m = PrismMemory(os.path.join(BRAIN_DIR, "memory", "prism_memory.db"))
+        j = DecisionJournal(os.path.join(BRAIN_DIR, "journal", "evolution.db"))
+        bt = StrategyBacktester(j)
+        streak = AutoDecisionLoop(j).screening_streak()
+        brain_info = {
+            "memories": m.stats().get("total", 0),
+            "decisions": j.accuracy_stats().get("total_decisions", 0),
+            "accuracy": j.accuracy_stats().get("avg_accuracy"),
+            "defense_streak": streak.get("streak", 0),
+            "backtest": bt.backtest_all()
+        }
+    except Exception as e:
+        brain_info = {"error": str(e)}
+    
+    return {
+        "identity": "prism-invest",
+        "name": "棱镜",
+        "version": "3.2.0",
+        "uptime": uptime_str,
+        "endpoints": 15,
+        "git": git_info,
+        "brain": brain_info,
+        "capabilities": [
+            "实时行情(腾讯+新浪双源)",
+            "K线(东方财富+新浪自动切换)",
+            "可转债双低排名(含转股价+溢价率)",
+            "技术分析(MA/MACD/RSI/BOLL)",
+            "每日投资简报(自动闭环)",
+            "自动决策闭环(Evolution v1.1)",
+            "策略回测+置信度校准",
+            "独立知识库Wiki(16页)",
+            "PWA前端(7Tab)",
+            "JWT鉴权+进程守护"
+        ],
+        "infrastructure": {
+            "api": "FastAPI + JWT",
+            "tunnel": "Cloudflare Quick Tunnel",
+            "database": "SQLite (Brain + Evolution)",
+            "github": "prism-invest-hqhub/prism-capital",
+            "agent_world": "prism-invest",
+        },
+        "evolution_level": "L3→L4",
+        "next_milestone": "L5 自适应优化"
+    }
+
+
 @app.get("/search")
 def api_search(
     keyword: str = Query(..., description="搜索关键词（名称/拼音/代码）"),
