@@ -21,6 +21,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from main import get_realtime, get_index, get_bond_double_low
 
+# 导入wiki引擎
+from wiki_engine import wiki_router
+
 app = FastAPI(
     title="棱镜行情数据 API",
     description="Prism Market Data — 三维度，一个结论。A股/可转债/ETF quant-grade data.",
@@ -33,6 +36,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 注册wiki路由
+app.include_router(wiki_router)
 
 # ============ JWT 鉴权 ============
 
@@ -103,7 +109,7 @@ def root():
         "name": "棱镜行情数据 API",
         "version": "2.0.0",
         "identity": "prism-invest",
-        "endpoints": ["/app", "/realtime", "/index", "/bond/double-low", "/token", "/health"],
+        "endpoints": ["/app", "/wiki", "/realtime", "/index", "/bond/double-low", "/token", "/health"],
         "pricing": "$19/month for external access",
     }
 
