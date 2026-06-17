@@ -418,6 +418,74 @@ def api_search(
     }
 
 
+@app.get("/daily-brief")
+def daily_brief(authorization: str = Header(None)):
+    """
+    每日投资简报 — 一键获取全市场快照
+    
+    整合：可转债筛选 + ETF技术分析 + 防守连续天数
+    用于日程自动触发
+    """
+    verify_token(authorization)
+    
+    result = {
+        "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+        "version": "3.1.0",
+    }
+    
+    # 1. 指数行情
+    try:
+        indices = get_index()
+        result["indices"] = indices if isinstance(indices, list) else []
+    except:
+        result["indices"] = []
+    
+    # 2. 可转债双低筛选
+    try:
+        bond_data = get_bond_double_low()
+        bonds = bond_data if isinstance(bond_data, list) else bond_data.get("data", [])
+        passed = [b for b in bonds if b.get("双低值", 999) < 120 and b.get("价格", 999) < 110]
+        min_dl = min([b.get("双低值", 999) for b in bonds]) if bonds else 999
+        result["bond_screening"] = {
+            "total": len(bonds),
+            "passed": len(passed),
+            "min_double_low": min_dl,
+            "conclusion": "无符合标准标的，维持防守" if len(passed) == 0 else f"发现{len(passed)}只标的"
+        }
+    except Exception as e:
+        result["bond_screening"] = {"error": str(e)}
+    
+    # 3. 沪深300ETF技术分析
+    try:
+        kline_result = get_kline("sh510300", period="day", count=120)
+        if kline_result and "数据" in kline_result and kline_result["数据"]:
+            from main import calculate_ma, calculate_macd, calculate_rsi, calculate_boll
+            close_prices = [bar["收盘"] for bar in kline_result["数据"] if isinstance(bar, dict) and bar.get("收盘")]
+            if len(close_prices) >= 30:
+                result["hs300_analysis"] = {
+                    "MA": calculate_ma(close_prices),
+                    "MACD": calculate_macd(close_prices),
+                    "RSI": calculate_rsi(close_prices),
+                    "布林带": calculate_boll(close_prices),
+                }
+    except Exception as e:
+        result["hs300_analysis"] = {"error": str(e)}
+    
+    # 4. Brain防守连续天数
+    try:
+        BRAIN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "prism-brain")
+        sys.path.insert(0, BRAIN_DIR)
+        from prism_evolution import AutoDecisionLoop, DecisionJournal
+        j = DecisionJournal(os.path.join(BRAIN_DIR, "journal", "evolution.db"))
+        loop = AutoDecisionLoop(j)
+        streak = loop.screening_streak()
+        result["defense_streak"] = streak
+    except:
+        result["defense_streak"] = {"streak": 0, "note": "Evolution模块不可用"}
+    
+    return result
+
+
 @app.get("/health")
 def health():
     """全系统自检：API + Brain + Evolution + 数据源"""
