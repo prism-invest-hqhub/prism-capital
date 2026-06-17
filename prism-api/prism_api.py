@@ -817,3 +817,33 @@ def api_sentiment_latest(days: int = Query(7, ge=1, le=30)):
         return {"data": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail={"error": str(e)})
+
+# ============ Bridge 端点 ============
+import json, time
+BRIDGE_FILE = os.path.join(os.path.dirname(__file__), "bridge_store.json")
+
+def _read_bridge():
+    if os.path.exists(BRIDGE_FILE):
+        with open(BRIDGE_FILE) as f: return json.load(f)
+    return {"messages": []}
+
+def _write_bridge(data):
+    with open(BRIDGE_FILE, "w") as f: json.dump(data, f, ensure_ascii=False, indent=2)
+
+@app.post("/bridge", dependencies=[Depends(verify_token)])
+def bridge_post(req: dict):
+    task_type = req.get("task_type", "unknown")
+    data = req.get("data")
+    ts = req.get("timestamp", time.strftime("%Y-%m-%dT%H:%M:%S"))
+    if data is None:
+        return {"ok": False, "error": "data is required"}
+    store = _read_bridge()
+    entry = {"task_type": task_type, "data": data, "timestamp": ts, "received_at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+    store["messages"].append(entry)
+    if len(store["messages"]) > 100: store["messages"] = store["messages"][-100:]
+    _write_bridge(store)
+    return {"ok": True, "stored": len(store["messages"])}
+
+@app.get("/bridge", dependencies=[Depends(verify_token)])
+def bridge_get():
+    return _read_bridge()

@@ -1,0 +1,12 @@
+{
+  "messages": [
+    {
+      "task_type": "桥测试",
+      "data": {
+        "message": "桥通了"
+      },
+      "timestamp": "2026-06-17T22:56:00",
+      "received_at": "2026-06-17T22:57:24"
+    }
+  ]
+}
