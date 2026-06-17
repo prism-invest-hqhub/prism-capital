@@ -7,6 +7,15 @@
       },
       "timestamp": "2026-06-17T22:56:00",
       "received_at": "2026-06-17T22:57:24"
+    },
+    {
+      "task_type": "system_notification",
+      "data": {
+        "title": "✅ Brain智力升级完成",
+        "body": "4个测试全通过：投资分析/风险判断/桥接意识/主人画像。PWA棱镜现在和扣子一样聪明了。主人醒了来PWA试试。"
+      },
+      "timestamp": "2026-06-18T00:13:00",
+      "received_at": "2026-06-18T00:13:00"
     }
   ]
 }
