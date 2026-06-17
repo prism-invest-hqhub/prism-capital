@@ -725,14 +725,16 @@ def api_backtest(
     try:
         from backtest_engine import BacktestEngine
         engine = BacktestEngine()
-        result = engine.run_backtest(
-            days=days,
-            strategy=strategy,
-            double_low_threshold=110,
-            max_positions=5,
-            rebalance_days=10,
-            stop_loss=-0.08,
-            take_profit=0.20,
+        bonds_data = engine.generate_bond_history(days=days, bond_count=20)
+        result = engine.run_double_low_backtest(
+            bonds_data=bonds_data,
+            params={
+                "double_low_threshold": 110,
+                "max_positions": 5,
+                "rebalance_days": 10,
+                "stop_loss": -0.08,
+                "take_profit": 0.20,
+            }
         )
         return {"data": result, "meta": {"days": days, "strategy": strategy}}
     except Exception as e:
