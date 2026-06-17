@@ -426,6 +426,14 @@ def get_bond_double_low(
         if not all_bonds:
             return [{"error": "可转债实时行情获取失败"}]
         
+        # Step 2.5: 获取转股价数据（东方财富数据中心）
+        convert_prices = _fetch_convert_prices()
+        # 将转股价注入到all_bonds中
+        for b in all_bonds:
+            code = b.get("代码", "")
+            if code in convert_prices:
+                b["转股价"] = convert_prices[code]
+        
         # Step 3: 获取正股价格
         stock_prices = _fetch_stock_prices(all_bonds)
         
@@ -522,6 +530,42 @@ def _fetch_bond_batch(batch: List[str], listed_df: 'DataFrame') -> List[Dict]:
     
     return bonds
 
+
+
+
+def _fetch_convert_prices() -> dict:
+    """从东方财富数据中心获取可转债初始转股价
+    注：这是初始转股价，未下修的转债=当前转股价；下修过的会有偏差
+    TODO: 接入集思录获取当前转股价
+    """
+    convert_prices = {}
+    page = 1
+    try:
+        while True:
+            url = 'https://datacenter-web.eastmoney.com/api/data/v1/get'
+            params = {
+                'reportName': 'RPT_BOND_CB_LIST',
+                'columns': 'SECURITY_CODE,INITIAL_TRANSFER_PRICE',
+                'pageSize': 500,
+                'pageNumber': page,
+                'sortColumns': 'SECURITY_CODE',
+                'sortTypes': 1,
+            }
+            resp = requests.get(url, params=params, timeout=15)
+            data = resp.json()
+            if not data.get('result') or not data['result'].get('data'):
+                break
+            for item in data['result']['data']:
+                code = item.get('SECURITY_CODE', '')
+                itp = item.get('INITIAL_TRANSFER_PRICE')
+                if code and itp:
+                    convert_prices[code] = float(itp)
+            if len(data['result']['data']) < 500:
+                break
+            page += 1
+    except Exception as e:
+        logger.warning(f"获取转股价数据失败: {e}")
+    return convert_prices
 
 def _fetch_stock_prices(bonds: List[Dict]) -> Dict[str, float]:
     """批量获取正股价格"""
