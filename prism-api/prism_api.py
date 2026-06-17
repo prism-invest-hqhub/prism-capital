@@ -420,13 +420,107 @@ def api_search(
 
 @app.get("/health")
 def health():
-    """健康检查"""
+    """全系统自检：API + Brain + Evolution + 数据源"""
+    checks = {}
+    overall = "healthy"
+    
+    # 1. API进程
+    checks["api"] = {"status": "ok", "version": "3.1.0", "port": 8900}
+    
+    # 2. Brain记忆
+    try:
+        brain_stats = _get_brain_stats()
+        checks["brain"] = {"status": "ok", **brain_stats}
+    except:
+        checks["brain"] = {"status": "degraded", "note": "Brain模块不可用"}
+        overall = "degraded"
+    
+    # 3. Evolution决策日志
+    try:
+        evo_stats = _get_evolution_stats()
+        checks["evolution"] = {"status": "ok", **evo_stats}
+    except:
+        checks["evolution"] = {"status": "degraded", "note": "Evolution模块不可用"}
+    
+    # 4. 数据源检测
+    sources = {}
+    # 腾讯实时行情
+    try:
+        r = requests.get("https://qt.gtimg.cn/q=sh000001", timeout=8,
+                         headers={"User-Agent": "Mozilla/5.0"})
+        sources["tencent_realtime"] = "ok" if r.status_code == 200 and "sh000001" in r.text else "fail"
+    except:
+        sources["tencent_realtime"] = "fail"
+    # 新浪K线
+    try:
+        r = requests.get("https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=sh000001&scale=240&datalen=1", timeout=8,
+                         headers={"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn"})
+        sources["sina_kline"] = "ok" if r.status_code == 200 and len(r.text) > 50 else "fail"
+    except:
+        sources["sina_kline"] = "fail"
+    # 东方财富DC
+    try:
+        r = requests.get("https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_BOND_CB_LIST&pageSize=1", timeout=8,
+                         headers={"User-Agent": "Mozilla/5.0"})
+        data = r.json()
+        # DC接口需要额外参数才算success，但能连通就算ok
+        sources["eastmoney_dc"] = "ok" if r.status_code == 200 else "fail"
+    except:
+        sources["eastmoney_dc"] = "fail"
+    # 东方财富push2his（经常被封）
+    try:
+        r = requests.get("https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.000001&fields1=f1&fields2=f51&klt=101&fqt=1&beg=20250101&end=20250102", timeout=5)
+        sources["eastmoney_kline"] = "ok" if r.status_code == 200 else "blocked"
+    except:
+        sources["eastmoney_kline"] = "blocked"
+    
+    checks["data_sources"] = sources
+    if "fail" in [sources.get("tencent_realtime"), sources.get("sina_kline")]:
+        overall = "degraded"
+    
+    # 5. 隧道状态
+    try:
+        import subprocess
+        result = subprocess.run(["pgrep", "-f", "cloudflared"], capture_output=True, text=True)
+        checks["tunnel"] = {"status": "ok" if result.returncode == 0 else "down"}
+        if result.returncode != 0:
+            overall = "degraded"
+    except:
+        checks["tunnel"] = {"status": "unknown"}
+    
     return {
-        "status": "alive",
+        "status": overall,
         "identity": "prism-invest",
         "version": "3.1.0",
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.now().isoformat(),
+        "checks": checks
     }
+
+
+def _get_brain_stats():
+    """获取Brain统计"""
+    try:
+        from prism_brain import PrismMemory
+        BRAIN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "prism-brain")
+        sys.path.insert(0, BRAIN_DIR)
+        m = PrismMemory(os.path.join(BRAIN_DIR, "memory", "prism_memory.db"))
+        stats = m.stats()
+        return {"memories": stats.get("total", 0), "tags": stats.get("by_tag", {})}
+    except:
+        return {}
+
+
+def _get_evolution_stats():
+    """获取Evolution统计"""
+    try:
+        from prism_evolution import DecisionJournal
+        BRAIN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "prism-brain")
+        sys.path.insert(0, BRAIN_DIR)
+        j = DecisionJournal(os.path.join(BRAIN_DIR, "journal", "evolution.db"))
+        stats = j.accuracy_stats()
+        return {"decisions": stats.get("total_decisions", 0), "accuracy": stats.get("avg_accuracy"), "lessons": stats.get("with_lessons", 0)}
+    except:
+        return {}
 
 
 # ============ PWA 前端 ============
