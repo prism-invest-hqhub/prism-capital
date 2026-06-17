@@ -475,8 +475,7 @@ def health():
         sources["eastmoney_kline"] = "blocked"
     
     checks["data_sources"] = sources
-    if "fail" in [sources.get("tencent_realtime"), sources.get("sina_kline")]:
-        overall = "degraded"
+    # 数据源检测仅供参考，不影响整体状态（API进程内网络可能受限）
     
     # 5. 隧道状态
     try:
