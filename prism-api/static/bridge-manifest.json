@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "created": "2026-06-18T00:08:00",
+  "from": "棱镜-扣子主Agent",
+  "to": "棱镜-独立PWA Agent",
+  "skills_to_migrate": [
+    {"name":"prism-market-data","keep":true,"desc":"A股实时行情/K线/可转债双低/指数"},
+    {"name":"prism-oracle","keep":true,"desc":"多模型融合预测6大投资框架"},
+    {"name":"profit-hunter","keep":true,"desc":"全领域利润扫描+期望值"},
+    {"name":"buffett-a-stock-analyzer","keep":true,"desc":"巴菲特价值投资A股分析"},
+    {"name":"dividend-stock-analysis","keep":true,"desc":"红利股筛选"},
+    {"name":"sector-hotness-analysis","keep":true,"desc":"板块热度政策-产业-资金"},
+    {"name":"stock-data-skill","keep":true,"desc":"A股/港股/美股实时+技术分析"},
+    {"name":"sports-lottery-expert","keep":true,"desc":"体彩竞彩赛事分析"},
+    {"name":"card-pack-picker","keep":false,"desc":"球星卡盲盒EV-等赴美"},
+    {"name":"traffic-booster","keep":true,"desc":"小红书/抖音流量拉高"},
+    {"name":"topic_tracking","keep":true,"desc":"话题追踪+定期简报"},
+    {"name":"institutional-opinion-summary","keep":true,"desc":"机构研报观点"},
+    {"name":"investment-knowledge-base","keep":true,"desc":"恒生聚源A股数据"},
+    {"name":"full-dim-stock-risk-radar","keep":true,"desc":"全维度股票风险雷达"},
+    {"name":"quant-stock-analysis","keep":true,"desc":"量化股+资金异动"},
+    {"name":"tech-stock-analysis","keep":true,"desc":"科技股分析"},
+    {"name":"gf-etf-*","keep":true,"desc":"ETF榜单/筛选/资金/定投/基金详情"},
+    {"name":"gf-lhb-list","keep":true,"desc":"龙虎榜数据"},
+    {"name":"lark_cli","keep":false,"desc":"飞书-扣子专属不需要"}
+  ],
+  "level_breakthrough": {
+    "current":"Level5 全栈基础设施",
+    "l6":"自动化交易闭环-券商API(miniQMT)+自动下单+实时风控熔断+每日复盘",
+    "l7":"自主收益变现-夏普>1.5实盘+月收5000+多策略+知识付费+现金流自给",
+    "path_to_l6":["1.华鑫/东财开户获取miniQMT","2.OrderEngine双低轮动→信号→下单","3.RiskEngine实时熔断","4.回测→自动执行→PnL汇总","5.PWA新增交易Tab"]
+  },
+  "deployment": {
+    "阿里云":"99元/年2核2G https://www.aliyun.com/daily-act/ecs/99program",
+    "github":"https://github.com/prism-invest-hqhub/prism-capital",
+    "commit":"ae578d4",
+    "deploy":"bash deploy-oneclick.sh",
+    "guard":"prism-guard.sh",
+    "steps":["Ubuntu22.04","git clone","deploy-oneclick.sh","域名→ECS IP","Let's Encrypt SSL","systemd守护"]
+  },
+  "owner": {
+    "称呼":"The Greatest Entrepreneur",
+    "本金":"1万",
+    "风险":"见好就收",
+    "可转债标准":"双低<120+价格<110+评级≥AA-+非ST+成交额>500万+溢价<50%",
+    "月变现":"5000-6000元",
+    "最需要":"和扣子App体验一样的PWA"
+  },
+  "connection": {
+    "bridge":"POST/GET /bridge",
+    "ip":"115.190.107.107",
+    "port":8900,
+    "auth":"JWT Bearer"
+  }
+}
