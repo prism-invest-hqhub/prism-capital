@@ -533,6 +533,129 @@ def _fetch_bond_batch(batch: List[str], listed_df: 'DataFrame') -> List[Dict]:
 
 
 
+
+
+# ============ 技术分析模块 ============
+
+def calculate_ma(prices: list, periods: list = [5, 10, 20, 60]) -> dict:
+    """计算移动平均线"""
+    result = {}
+    for p in periods:
+        if len(prices) >= p:
+            result[f"MA{p}"] = round(sum(prices[-p:]) / p, 2)
+        else:
+            result[f"MA{p}"] = None
+    return result
+
+
+def calculate_macd(prices: list, fast: int = 12, slow: int = 26, signal: int = 9) -> dict:
+    """计算MACD指标"""
+    if len(prices) < slow + signal:
+        return {"MACD": None, "Signal": None, "Histogram": None, "趋势": "数据不足"}
+    
+    # EMA计算
+    def ema(data, period):
+        multiplier = 2 / (period + 1)
+        result = [data[0]]
+        for price in data[1:]:
+            result.append((price - result[-1]) * multiplier + result[-1])
+        return result
+    
+    ema_fast = ema(prices, fast)
+    ema_slow = ema(prices, slow)
+    dif = [f - s for f, s in zip(ema_fast, ema_slow)]
+    
+    dea = ema(dif, signal)
+    histogram = [d - e for d, e in zip(dif, dea)]
+    
+    trend = "多头" if dif[-1] > dea[-1] else "空头"
+    if len(histogram) >= 2:
+        if histogram[-1] > histogram[-2] > 0:
+            trend = "多头加速"
+        elif 0 < histogram[-1] < histogram[-2]:
+            trend = "多头衰减"
+        elif histogram[-1] < histogram[-2] < 0:
+            trend = "空头加速"
+        elif 0 > histogram[-1] > histogram[-2]:
+            trend = "空头衰减"
+    
+    return {
+        "DIF": round(dif[-1], 3),
+        "DEA": round(dea[-1], 3),
+        "MACD柱": round(histogram[-1] * 2, 3),
+        "趋势": trend,
+    }
+
+
+def calculate_rsi(prices: list, period: int = 14) -> dict:
+    """计算RSI指标"""
+    if len(prices) < period + 1:
+        return {"RSI": None, "状态": "数据不足"}
+    
+    changes = [prices[i] - prices[i-1] for i in range(1, len(prices))]
+    gains = [max(c, 0) for c in changes[-period:]]
+    losses = [max(-c, 0) for c in changes[-period:]]
+    
+    avg_gain = sum(gains) / period
+    avg_loss = sum(losses) / period
+    
+    if avg_loss == 0:
+        rsi = 100
+    else:
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+    
+    if rsi > 80:
+        state = "严重超买"
+    elif rsi > 70:
+        state = "超买"
+    elif rsi > 60:
+        state = "偏强"
+    elif rsi > 40:
+        state = "中性"
+    elif rsi > 30:
+        state = "偏弱"
+    elif rsi > 20:
+        state = "超卖"
+    else:
+        state = "严重超卖"
+    
+    return {
+        "RSI": round(rsi, 2),
+        "状态": state,
+    }
+
+
+def calculate_boll(prices: list, period: int = 20, std_dev: float = 2.0) -> dict:
+    """计算布林带"""
+    if len(prices) < period:
+        return {"上轨": None, "中轨": None, "下轨": None, "位置": "数据不足"}
+    
+    import statistics
+    slice_prices = prices[-period:]
+    mid = sum(slice_prices) / period
+    std = statistics.stdev(slice_prices)
+    upper = mid + std_dev * std
+    lower = mid - std_dev * std
+    current = prices[-1]
+    
+    if current > upper:
+        pos = "突破上轨"
+    elif current > mid:
+        pos = "中上区间"
+    elif current > lower:
+        pos = "中下区间"
+    else:
+        pos = "跌破下轨"
+    
+    return {
+        "上轨": round(upper, 2),
+        "中轨": round(mid, 2),
+        "下轨": round(lower, 2),
+        "位置": pos,
+        "带宽": round((upper - lower) / mid * 100, 2),
+    }
+
 def _fetch_convert_prices() -> dict:
     """从东方财富数据中心获取可转债初始转股价
     注：这是初始转股价，未下修的转债=当前转股价；下修过的会有偏差

@@ -31,6 +31,7 @@ from main import (
     get_realtime, 
     get_index, 
     get_bond_double_low,
+    calculate_ma, calculate_macd, calculate_rsi, calculate_boll,
     get_kline,
     get_config,
     DEFAULT_INDICES,
@@ -57,7 +58,7 @@ logger = logging.getLogger("prism-api")
 app = FastAPI(
     title="棱镜行情数据 API",
     description="Prism Market Data — 三维度，一个结论。A股/可转债/ETF/K线 quant-grade data.",
-    version="3.0.0",
+    version="3.1.0",
 )
 
 app.add_middleware(
@@ -197,7 +198,7 @@ def root():
     """API根路径"""
     return {
         "name": "棱镜行情数据 API",
-        "version": "3.0.0",
+        "version": "3.1.0",
         "identity": "prism-invest",
         "endpoints": {
             "realtime": "/realtime?codes=sh600519,sz000001",
@@ -315,13 +316,59 @@ def api_bond_double_low(
     )
 
 
+
+
+@app.get("/analyze", response_model=SuccessResponse)
+def api_analyze(
+    code: str = Query(..., description="股票代码，如sh600519"),
+    token_data: dict = Depends(verify_token),
+):
+    """技术分析：MA/MACD/RSI/布林带"""
+    _check_rate_limit(token_data, "analyze")
+    
+    # 获取日K线数据（最近120天）
+    kline_result = get_kline(code, period="day", count=120)
+    if not kline_result or "数据" not in kline_result:
+        raise HTTPException(status_code=404, detail={"error": f"未找到 {code} 的K线数据"})
+    
+    kline_data = kline_result["数据"]
+    if not kline_data:
+        raise HTTPException(status_code=404, detail={"error": f"{code} K线数据为空"})
+    
+    close_prices = [bar["收盘"] for bar in kline_data if isinstance(bar, dict) and bar.get("收盘")]
+    if len(close_prices) < 30:
+        raise HTTPException(status_code=400, detail={"error": "K线数据不足，至少需要30根"})
+    
+    ma = calculate_ma(close_prices)
+    macd = calculate_macd(close_prices)
+    rsi = calculate_rsi(close_prices)
+    boll = calculate_boll(close_prices)
+    
+    latest = kline_data[-1]
+    
+    return SuccessResponse(
+        data={
+            "代码": code,
+            "最新价": latest.get("收盘", 0),
+            "日期": latest.get("日期", ""),
+            "MA": ma,
+            "MACD": macd,
+            "RSI": rsi,
+            "布林带": boll,
+        },
+        meta={
+            "data_points": len(close_prices),
+            "source": "tencent/kline",
+        }
+    )
+
 @app.get("/config")
 def api_config():
     """获取API配置信息"""
     config = get_config()
     return {
         "config": config,
-        "version": "3.0.0",
+        "version": "3.1.0",
         "note": "这是运行时配置，可通过环境变量覆盖"
     }
 
@@ -349,7 +396,7 @@ def health():
     return {
         "status": "alive",
         "identity": "prism-invest",
-        "version": "3.0.0",
+        "version": "3.1.0",
         "timestamp": datetime.datetime.utcnow().isoformat()
     }
 
