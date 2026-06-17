@@ -346,8 +346,80 @@ def get_kline(code: str, period: str = "daily", count: int = 100) -> Dict:
         }
     
     except Exception as e:
-        logger.error(f"获取K线失败: {code} - {e}")
+        logger.warning(f"efinance K线失败，切换新浪源: {code} - {e}")
+        # fallback: 新浪财经K线
+        result = _get_kline_sina(code, period, count)
+        if result and "error" not in result:
+            return result
         return {"error": f"获取K线失败: {str(e)}"}
+
+
+def _get_kline_sina(code: str, period: str = "daily", count: int = 100) -> Dict:
+    """新浪财经K线数据（东方财富失败时的备用源）"""
+    try:
+        # 新浪需要不带前缀的6位代码
+        raw_code = code[2:] if code.startswith(("sh", "sz")) else code
+        prefix = code[:2] if code.startswith(("sh", "sz")) else ("sh" if raw_code.startswith(("5","6","9")) else "sz")
+        sina_code = f"{prefix}{raw_code}"
+        
+        # scale: 240=日线, 1200=周线, 7200=月线
+        scale_map = {"daily": "240", "weekly": "1200", "monthly": "7200", "qfqdaily": "240"}
+        scale = scale_map.get(period, "240")
+        
+        url = "https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData"
+        params = {"symbol": sina_code, "scale": scale, "ma": "no", "datalen": str(min(count, 500))}
+        
+        resp = requests.get(url, params=params, timeout=10, headers={"Referer": "https://finance.sina.com.cn"})
+        if resp.status_code != 200 or not resp.text.strip():
+            return {"error": "新浪K线数据为空"}
+        
+        raw_data = json.loads(resp.text)
+        if not isinstance(raw_data, list) or len(raw_data) == 0:
+            return {"error": "新浪K线解析失败"}
+        
+        data = []
+        for bar in raw_data:
+            close_p = _safe_float(bar.get("close", 0))
+            open_p = _safe_float(bar.get("open", 0))
+            high_p = _safe_float(bar.get("high", 0))
+            low_p = _safe_float(bar.get("low", 0))
+            vol = _safe_int(bar.get("volume", 0))
+            change_pct = round((close_p - open_p) / open_p * 100, 2) if open_p > 0 else 0
+            if len(data) > 0:
+                prev_close = data[-1]["收盘"]
+                if prev_close > 0:
+                    change_pct = round((close_p - prev_close) / prev_close * 100, 2)
+            data.append({
+                "日期": bar.get("day", ""),
+                "开盘": open_p,
+                "收盘": close_p,
+                "最高": high_p,
+                "最低": low_p,
+                "成交量": vol,
+                "成交额": 0,
+                "涨跌幅": change_pct
+            })
+        
+        # 获取名称
+        try:
+            basic = get_realtime(code)
+            stock_name = basic.get("名称", code) if isinstance(basic, dict) else code
+        except:
+            stock_name = code
+        
+        period_names = {"daily": "日K", "weekly": "周K", "monthly": "月K", "qfqdaily": "前复权日K"}
+        
+        return {
+            "代码": code,
+            "名称": stock_name,
+            "周期": period_names.get(period, "日K"),
+            "数据": data,
+            "更新时间": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "数据源": "sina_fallback"
+        }
+    except Exception as e:
+        logger.error(f"新浪K线也失败: {code} - {e}")
+        return {"error": f"新浪K线fallback失败: {str(e)}"}
 
 
 # ============ 指数行情 ============
