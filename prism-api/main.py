@@ -656,6 +656,76 @@ def calculate_boll(prices: list, period: int = 20, std_dev: float = 2.0) -> dict
         "带宽": round((upper - lower) / mid * 100, 2),
     }
 
+
+
+def get_fund_flow(code: str, days: int = 10) -> dict:
+    """获取个股资金流向（东方财富）
+    
+    参数:
+        code: 股票代码，如sh600519
+        days: 返回天数，默认10
+    """
+    # 转换代码格式
+    raw_code = code.replace('sh', '').replace('sz', '')
+    prefix = '1' if code.startswith('sh') or code.startswith('6') else '0'
+    secid = f"{prefix}.{raw_code}"
+    
+    try:
+        url = 'http://push2his.eastmoney.com/api/qt/stock/fflow/daykline/get'
+        params = {
+            'secid': secid,
+            'fields1': 'f1,f2,f3,f4',
+            'fields2': 'f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61',
+            'lmt': days,
+            'klt': 101,
+        }
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://data.eastmoney.com/',
+        }
+        session = requests.Session()
+        session.headers.update(headers)
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+        retry_strategy = Retry(total=3, backoff_factor=0.5, status_forcelist=[502, 503, 504])
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        resp = session.get(url, params=params, timeout=10)
+        data = resp.json()
+        
+        if not data.get('data') or not data['data'].get('klines'):
+            return {"error": f"未找到 {code} 的资金流向数据"}
+        
+        flows = []
+        for line in data['data']['klines']:
+            fields = line.split(',')
+            if len(fields) >= 11:
+                flows.append({
+                    "日期": fields[0],
+                    "主力净流入": round(_safe_float(fields[1]) / 1e8, 2),  # 亿元
+                    "小单净流入": round(_safe_float(fields[2]) / 1e8, 2),
+                    "中单净流入": round(_safe_float(fields[3]) / 1e8, 2),
+                    "大单净流入": round(_safe_float(fields[4]) / 1e8, 2),
+                    "超大单净流入": round(_safe_float(fields[5]) / 1e8, 2),
+                    "主力净流入占比": _safe_float(fields[6]),
+                })
+        
+        # 计算汇总
+        total_main = sum(f["主力净流入"] for f in flows)
+        latest = flows[-1] if flows else {}
+        
+        return {
+            "代码": code,
+            "最新日期": latest.get("日期", ""),
+            "最新主力净流入(亿)": latest.get("主力净流入", 0),
+            f"近{days}日主力净流入(亿)": round(total_main, 2),
+            "主力方向": "净流入" if total_main > 0 else "净流出",
+            "明细": flows,
+        }
+    except Exception as e:
+        return {"error": f"资金流向获取失败: {e}"}
+
 def _fetch_convert_prices() -> dict:
     """从东方财富数据中心获取可转债初始转股价
     注：这是初始转股价，未下修的转债=当前转股价；下修过的会有偏差

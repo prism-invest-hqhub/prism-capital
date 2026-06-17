@@ -32,6 +32,7 @@ from main import (
     get_index, 
     get_bond_double_low,
     calculate_ma, calculate_macd, calculate_rsi, calculate_boll,
+    get_fund_flow,
     get_kline,
     get_config,
     DEFAULT_INDICES,
@@ -360,6 +361,27 @@ def api_analyze(
             "data_points": len(close_prices),
             "source": "tencent/kline",
         }
+    )
+
+
+
+@app.get("/fundflow", response_model=SuccessResponse)
+def api_fundflow(
+    code: str = Query(..., description="股票代码，如sh600519"),
+    days: int = Query(10, description="天数", ge=1, le=60),
+    token_data: dict = Depends(verify_token),
+):
+    """资金流向：主力/散户资金净流入"""
+    _check_rate_limit(token_data, "fundflow")
+    
+    result = get_fund_flow(code, days=days)
+    
+    if isinstance(result, dict) and "error" in result:
+        raise HTTPException(status_code=503, detail=result)
+    
+    return SuccessResponse(
+        data=result,
+        meta={"source": "eastmoney/fundflow"}
     )
 
 @app.get("/config")
