@@ -703,3 +703,115 @@ def serve_icon(size: int):
     if os.path.exists(path):
         return FileResponse(path, media_type="image/png")
     raise HTTPException(status_code=404)
+
+
+# ============ Level 5 端点: 回测/风控/告警/情感/持仓 ============
+
+# 导入Level 5模块
+sys.path.insert(0, "/app/data/所有对话/主对话/prism-backtest")
+sys.path.insert(0, "/app/data/所有对话/主对话/prism-risk")
+sys.path.insert(0, "/app/data/所有对话/主对话/prism-alert")
+sys.path.insert(0, "/app/data/所有对话/主对话/prism-sentiment")
+sys.path.insert(0, "/app/data/所有对话/主对话/prism-data")
+
+
+@app.get("/backtest")
+def api_backtest(
+    days: int = Query(180, ge=30, le=365, description="回测天数"),
+    strategy: str = Query("double_low", description="策略名称"),
+    token_data: dict = Depends(verify_token),
+):
+    """运行策略回测"""
+    try:
+        from backtest_engine import BacktestEngine
+        engine = BacktestEngine()
+        result = engine.run_backtest(
+            days=days,
+            strategy=strategy,
+            double_low_threshold=110,
+            max_positions=5,
+            rebalance_days=10,
+            stop_loss=-0.08,
+            take_profit=0.20,
+        )
+        return {"data": result, "meta": {"days": days, "strategy": strategy}}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/risk/report", dependencies=[Depends(verify_token)])
+def api_risk_report():
+    """风险报告"""
+    try:
+        from risk_engine import RiskEngine
+        engine = RiskEngine()
+        report = engine.generate_report()
+        return {"data": report}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/alerts", dependencies=[Depends(verify_token)])
+def api_get_alerts(limit: int = Query(20, ge=1, le=50)):
+    """获取未读告警"""
+    try:
+        from alert_engine import AlertEngine
+        from prism_db import get_unread_alerts
+        alerts = get_unread_alerts()
+        return {"data": alerts, "count": len(alerts)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.post("/alerts/{alert_id}/read", dependencies=[Depends(verify_token)])
+def api_mark_alert_read(alert_id: int):
+    """标记告警已读"""
+    try:
+        from prism_db import get_conn
+        conn = get_conn()
+        conn.execute("UPDATE alerts SET is_read=1 WHERE id=?", (alert_id,))
+        conn.commit()
+        conn.close()
+        return {"success": True, "alert_id": alert_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/signals/recent", dependencies=[Depends(verify_token)])
+def api_recent_signals(limit: int = Query(20, ge=1, le=50)):
+    """最近策略信号"""
+    try:
+        from prism_db import get_conn
+        conn = get_conn()
+        rows = conn.execute("""
+            SELECT * FROM signals 
+            ORDER BY created_at DESC 
+            LIMIT ?
+        """, (limit,)).fetchall()
+        conn.close()
+        return {"data": [dict(r) for r in rows], "count": len(rows)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/portfolio", dependencies=[Depends(verify_token)])
+def api_portfolio():
+    """持仓和盈亏"""
+    try:
+        from prism_db import get_pnl_summary
+        portfolio = get_pnl_summary()
+        return {"data": portfolio}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.get("/sentiment/latest", dependencies=[Depends(verify_token)])
+def api_sentiment_latest(days: int = Query(7, ge=1, le=30)):
+    """最近情感分析"""
+    try:
+        from sentiment_engine import SentimentEngine
+        engine = SentimentEngine()
+        summary = engine.get_sentiment_summary(days=days)
+        return {"data": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"error": str(e)})
