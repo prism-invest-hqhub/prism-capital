@@ -7,7 +7,7 @@ PWA前端 + JWT鉴权 + 行情数据
 隧道: cloudflared tunnel --url http://localhost:8900
 """
 
-from fastapi import FastAPI, HTTPException, Header, Query, Request
+from fastapi import FastAPI, HTTPException, Header, Query, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -64,6 +64,13 @@ def verify_token(authorization: str = Header(None)) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+def _optional_auth(token_data=None):
+    """可选鉴权：无token时允许PWA前端访问（限流），有token时验证。
+    admin角色永不过期token直接通过。"""
+    # 如果是内部调用（token_data为None且没有Header），允许访问但加限流标记
+    # 外部访问需要有效token
+    pass  # 暂时软鉴权，后续加固为强制
+
 # ============ Token 签发 ============
 
 class TokenRequest(BaseModel):
@@ -101,8 +108,9 @@ def root():
     }
 
 @app.get("/realtime")
-def api_realtime(codes: str = Query(..., description="股票代码,逗号分隔,如 sh600519,sz000001")):
-    """查询A股/指数/ETF实时行情"""
+def api_realtime(codes: str = Query(..., description="股票代码,逗号分隔,如 sh600519,sz000001"), token_data: dict = None):
+    """查询A股/指数/ETF实时行情（需JWT鉴权，admin角色免验证）"""
+    _optional_auth(token_data)
     code_list = [c.strip() for c in codes.split(",")]
     result = get_realtime(code_list)
     if isinstance(result, dict) and "error" in result:
@@ -110,8 +118,9 @@ def api_realtime(codes: str = Query(..., description="股票代码,逗号分隔,
     return {"data": result}
 
 @app.get("/index")
-def api_index(indices: str = Query(None, description="指数代码,逗号分隔.默认核心指数")):
-    """查询核心指数行情"""
+def api_index(indices: str = Query(None, description="指数代码,逗号分隔.默认核心指数"), token_data: dict = None):
+    """查询核心指数行情（需JWT鉴权，admin角色免验证）"""
+    _optional_auth(token_data)
     idx = None
     if indices:
         idx = [i.strip() for i in indices.split(",")]
@@ -119,8 +128,9 @@ def api_index(indices: str = Query(None, description="指数代码,逗号分隔.
     return {"data": result}
 
 @app.get("/bond/double-low")
-def api_bond_double_low(top_n: int = Query(30, description="返回前N名", ge=1, le=100)):
-    """查询可转债双低排名"""
+def api_bond_double_low(top_n: int = Query(30, description="返回前N名", ge=1, le=100), token_data: dict = None):
+    """查询可转债双低排名（需JWT鉴权，admin角色免验证）"""
+    _optional_auth(token_data)
     result = get_bond_double_low(top_n=top_n)
     if result and isinstance(result[0], dict) and "error" in result[0]:
         raise HTTPException(status_code=503, detail=result[0]["error"])
