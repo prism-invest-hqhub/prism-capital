@@ -196,12 +196,21 @@
         <div id="alertSummary"></div>
         <div id="alertContent"><div class="loading"><div class="spinner"></div>加载中...</div></div>
     </div>
+    <div class="section" id="sectionChat" style="display:flex;flex-direction:column;height:calc(100vh - 140px);padding:0 16px">
+        <div class="section-title">💬 与棱镜聊天</div>
+        <div id="chatMessages" style="flex:1;overflow-y:auto;padding:8px 0;-webkit-overflow-scrolling:touch"></div>
+        <div style="display:flex;gap:8px;padding:8px 0 12px;position:sticky;bottom:0;background:var(--bg)">
+            <input id="chatInput" type="text" placeholder="输入消息..." style="flex:1;background:rgba(42,42,74,0.4);border:1px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:15px;outline:none" onkeydown="if(event.key==='Enter')sendChat()">
+            <button onclick="sendChat()" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:none;border-radius:12px;padding:10px 18px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">发送</button>
+        </div>
+    </div>
     <div class="tab-bar">
         <div class="tab-item active" onclick="switchTab('Market',this)"><span class="tab-icon">💰</span><span>行情</span></div>
         <div class="tab-item" onclick="switchTab('Portfolio',this)"><span class="tab-icon">📊</span><span>持仓</span></div>
         <div class="tab-item" onclick="switchTab('Backtest',this)"><span class="tab-icon">📈</span><span>回测</span></div>
         <div class="tab-item" onclick="switchTab('Risk',this)"><span class="tab-icon">🛡️</span><span>风控</span></div>
         <div class="tab-item" onclick="switchTab('Alert',this)"><span class="tab-icon">🔔</span><span>告警</span></div>
+        <div class="tab-item" onclick="switchTab('Chat',this)"><span class="tab-icon">💬</span><span>聊天</span></div>
     </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -229,6 +238,40 @@ async function loadRiskReport(){const d=await apiFetch('/risk/report');if(!d){do
 // 告警列表
 async function loadAlerts(){const d=await apiFetch('/alerts?limit=20');if(!d){document.getElementById('alertContent').innerHTML='<div class="empty-state"><div class="empty-icon">🔔</div><div>暂无告警</div></div>';return}const alerts=d.data||[];const unread=alerts.filter(a=>!a.is_read).length;document.getElementById('alertSummary').innerHTML='<div class="stats-grid" style="margin-bottom:12px"><div class="stat-card"><div class="stat-value">'+unread+'</div><div class="stat-label">未读告警</div></div><div class="stat-card"><div class="stat-value">'+alerts.length+'</div><div class="stat-label">总告警数</div></div></div>';if(!alerts.length){document.getElementById('alertContent').innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><div>暂无告警</div></div>';return}let html='';alerts.forEach(a=>{const sev=a.severity||'INFO';html+='<div class="alert-card '+(a.is_read?'':'unread')+'" id="alert-'+a.id+'"><div class="alert-header"><span class="alert-title">'+escHtml(a.title||'')+'</span><span class="alert-severity '+sev+'">'+sev+'</span></div><div class="alert-message">'+escHtml(a.message||'')+'</div><div class="alert-time">'+escHtml(a.created_at||'')+'</div>'+(a.is_read?'':'<button class="mark-read-btn" onclick="markAlertRead('+a.id+')">✓ 标记已读</button>')+'</div>'});document.getElementById('alertContent').innerHTML=html}
 async function markAlertRead(id){const d=await apiFetch('/alerts/'+id+'/read',{method:'POST'});if(d&&d.success){showToast('已标记已读');loadAlerts()}else{showToast('操作失败','error')}}
+// 聊天功能
+let chatLoading=false;
+function appendChatMsg(role,text){
+    const c=document.getElementById('chatMessages');
+    const d=document.createElement('div');
+    d.style.cssText='margin-bottom:10px;display:flex;'+(role==='user'?'justify-content:flex-end':'justify-content:flex-start');
+    const b=document.createElement('div');
+    b.style.cssText='max-width:80%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;'+(role==='user'?'background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-bottom-right-radius:4px':'background:rgba(42,42,74,0.5);color:var(--text);border-bottom-left-radius:4px');
+    b.textContent=text;
+    d.appendChild(b);
+    c.appendChild(d);
+    c.scrollTop=c.scrollHeight;
+}
+async function sendChat(){
+    if(chatLoading)return;
+    const input=document.getElementById('chatInput');
+    const msg=input.value.trim();
+    if(!msg)return;
+    input.value='';
+    appendChatMsg('user',msg);
+    chatLoading=true;
+    const loadingDiv=document.createElement('div');
+    loadingDiv.id='chatLoading';
+    loadingDiv.style.cssText='margin-bottom:10px;display:flex;justify-content:flex-start';
+    loadingDiv.innerHTML='<div style="background:rgba(42,42,74,0.5);color:var(--text-dimmer);padding:10px 14px;border-radius:14px;border-bottom-left-radius:4px;font-size:14px">棱镜思考中...</div>';
+    document.getElementById('chatMessages').appendChild(loadingDiv);
+    try{
+        const r=await fetch(API+'/brain/chat',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify({message:msg,use_llm:true})});
+        const d=await r.json();
+        document.getElementById('chatLoading')?.remove();
+        if(d.reply){appendChatMsg('bot',d.reply)}else{appendChatMsg('bot','(无回复，请重试)')}
+    }catch(e){document.getElementById('chatLoading')?.remove();appendChatMsg('bot','连接失败，请重试')}
+    chatLoading=false;
+}
 // 自动登录
 if(TOKEN){fetch(API+'/daily-brief',{headers:{'Authorization':'Bearer '+TOKEN}}).then(r=>{if(r.ok)enterApp()}).catch(()=>{})}
 </script>
