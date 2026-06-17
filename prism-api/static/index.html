@@ -12,14 +12,7 @@
     <link rel="apple-touch-icon" href="/icon-192.png">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        :root{
-            --bg:#0a0a1a;--card:#12122a;--card-hover:#1a1a3a;
-            --border:#2a2a4a;--primary:#6c5ce7;--primary-light:#a29bfe;
-            --accent:#00cec9;--red:#ff6b6b;--green:#51cf66;
-            --text:#e8e8f0;--text-dim:#8888aa;--text-dimmer:#555577;
-            --radius:16px;--safe-top:env(safe-area-inset-top,0px);
-            --safe-bottom:env(safe-area-inset-bottom,0px)
-        }
+        :root{--bg:#0a0a1a;--card:#12122a;--card-hover:#1a1a3a;--border:#2a2a4a;--primary:#6c5ce7;--primary-light:#a29bfe;--accent:#00cec9;--red:#ff6b6b;--green:#51cf66;--text:#e8e8f0;--text-dim:#8888aa;--text-dimmer:#555577;--radius:16px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
         body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
         .login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;background:radial-gradient(ellipse at top,#1a1a4a 0%,var(--bg) 70%)}
         .login-logo{width:100px;height:100px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:24px;box-shadow:0 8px 32px rgba(108,92,231,0.3)}
@@ -40,7 +33,7 @@
         .search-input:focus{border-color:var(--primary)}
         .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dimmer);font-size:18px}
         .tab-bar{position:fixed;bottom:0;left:0;right:0;height:calc(80px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:rgba(10,10,26,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:space-around;align-items:center;border-top:1px solid rgba(42,42,74,0.5);z-index:100}
-        .tab-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-dimmer);font-size:11px;cursor:pointer;padding:8px 16px;-webkit-tap-highlight-color:transparent}
+        .tab-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-dimmer);font-size:11px;cursor:pointer;padding:8px 12px;-webkit-tap-highlight-color:transparent}
         .tab-item.active{color:var(--primary-light)}
         .tab-icon{font-size:24px}
         .section{display:none;padding:0 16px}
@@ -85,24 +78,48 @@
         .toast.success{border-color:rgba(81,207,102,0.3);color:var(--green)}
         .refresh-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--primary-light);font-size:13px;cursor:pointer;margin:8px 0}
         .refresh-btn:active{background:var(--card-hover)}
+        .chat-container{display:flex;flex-direction:column;height:calc(100vh - 140px - var(--safe-top) - var(--safe-bottom));overflow:hidden}
+        .chat-messages{flex:1;overflow-y:auto;padding:8px 0;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+        .chat-msg{max-width:85%;padding:12px 16px;border-radius:16px;margin-bottom:8px;font-size:14px;line-height:1.6;word-break:break-word;white-space:pre-wrap}
+        .chat-msg.user{background:linear-gradient(135deg,var(--primary),#5a4bd1);color:white;margin-left:auto;border-bottom-right-radius:4px}
+        .chat-msg.bot{background:var(--card);border:1px solid var(--border);margin-right:auto;border-bottom-left-radius:4px}
+        .chat-msg.bot .msg-meta{font-size:11px;color:var(--text-dimmer);margin-top:6px;display:flex;gap:8px;align-items:center}
+        .chat-msg.system{background:rgba(108,92,231,0.1);border:1px solid rgba(108,92,231,0.2);color:var(--primary-light);text-align:center;font-size:12px;max-width:100%;border-radius:8px;margin:8px 0}
+        .chat-typing{display:flex;align-items:center;gap:6px;padding:8px 16px;color:var(--text-dimmer);font-size:13px}
+        .chat-typing .dot{width:6px;height:6px;background:var(--primary-light);border-radius:50%;animation:bounce 1.2s infinite}
+        .chat-typing .dot:nth-child(2){animation-delay:0.2s}
+        .chat-typing .dot:nth-child(3){animation-delay:0.4s}
+        @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+        .chat-input-bar{display:flex;gap:8px;padding:12px 0;align-items:flex-end}
+        .chat-input{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:15px;outline:none;resize:none;max-height:100px;min-height:42px;line-height:1.4}
+        .chat-input:focus{border-color:var(--primary)}
+        .chat-input::placeholder{color:var(--text-dimmer)}
+        .chat-send{width:42px;height:42px;background:linear-gradient(135deg,var(--primary),#5a4bd1);border:none;border-radius:50%;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .chat-send:active{transform:scale(0.92)}
+        .chat-send:disabled{opacity:0.4;cursor:not-allowed}
+        .chat-header-info{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dimmer);margin-top:4px}
+        .dot-online{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block}
+        .dot-offline{width:6px;height:6px;background:var(--red);border-radius:50%;display:inline-block}
     </style>
 </head>
 <body>
 <div class="login-screen" id="loginScreen">
     <div class="login-logo">🔷</div>
     <div class="login-title">棱镜</div>
-    <div class="login-sub">Prism Capital · 投资数据终端</div>
+    <div class="login-sub">Prism Capital · 独立投资Agent</div>
     <input type="password" class="login-input" id="tokenInput" placeholder="输入访问 Token">
     <button class="login-btn" onclick="doLogin()">进入棱镜</button>
     <div class="login-hint">仅限授权用户 · External $19/mo</div>
 </div>
-
 <div class="app" id="mainApp">
     <div class="top-bar">
-        <div class="top-bar-logo">🔷 棱镜</div>
+        <div>
+            <div class="top-bar-logo">🔷 棱镜</div>
+            <div class="chat-header-info" id="chatHeaderInfo"><span class="dot-online"></span><span>V4 Flash · ¥0.7/M</span></div>
+        </div>
         <div class="top-bar-time" id="clock"></div>
     </div>
-    <div class="search-bar">
+    <div class="search-bar" id="searchBar">
         <span class="search-icon">🔍</span>
         <input type="text" class="search-input" id="searchInput" placeholder="输入股票代码或名称...">
     </div>
@@ -113,20 +130,30 @@
     </div>
     <div class="section" id="sectionQuote">
         <div class="section-title">📈 实时行情</div>
-        <div id="quoteContent">
-            <div class="empty-state"><div class="empty-icon">🔍</div><div>搜索股票代码查看行情</div><div style="margin-top:8px;font-size:12px;color:var(--text-dimmer)">如 sh600519、sz000001</div></div>
-        </div>
+        <div id="quoteContent"><div class="empty-state"><div class="empty-icon">🔍</div><div>搜索股票代码查看行情</div><div style="margin-top:8px;font-size:12px;color:var(--text-dimmer)">如 sh600519、sz000001</div></div></div>
     </div>
     <div class="section" id="sectionBond">
         <div class="section-title">💰 可转债双低排名</div>
         <button class="refresh-btn" onclick="loadBonds()">🔄 刷新</button>
         <div id="bondContent"><div class="loading"><div class="spinner"></div>加载中...</div></div>
     </div>
+    <div class="section" id="sectionChat">
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-msg system">🔷 棱镜大脑已上线 · DeepSeek V4驱动</div>
+            </div>
+            <div class="chat-input-bar">
+                <textarea class="chat-input" id="chatInput" placeholder="跟棱镜说话..." rows="1"></textarea>
+                <button class="chat-send" id="chatSendBtn" onclick="sendChat()">➤</button>
+            </div>
+        </div>
+    </div>
     <div class="section" id="sectionSettings">
         <div class="section-title">⚙️ 设置</div>
         <div class="settings-item"><span class="settings-label">身份</span><span class="settings-value" id="userIdentity">-</span></div>
         <div class="settings-item"><span class="settings-label">权限</span><span class="settings-value" id="userTier">-</span></div>
         <div class="settings-item"><span class="settings-label">API</span><span class="settings-value" id="apiStatus">检测中...</span></div>
+        <div class="settings-item"><span class="settings-label">Brain</span><span class="settings-value" id="brainStatus">-</span></div>
         <div class="settings-item"><span class="settings-label">版本</span><span class="settings-value">Prism v2.0</span></div>
         <button class="logout-btn" onclick="doLogout()">退出登录</button>
     </div>
@@ -134,27 +161,35 @@
         <div class="tab-item active" onclick="switchTab('Index',this)"><span class="tab-icon">📊</span><span>指数</span></div>
         <div class="tab-item" onclick="switchTab('Quote',this)"><span class="tab-icon">📈</span><span>行情</span></div>
         <div class="tab-item" onclick="switchTab('Bond',this)"><span class="tab-icon">💰</span><span>转债</span></div>
+        <div class="tab-item" onclick="switchTab('Chat',this)"><span class="tab-icon">💬</span><span>聊天</span></div>
         <div class="tab-item" onclick="switchTab('Settings',this)"><span class="tab-icon">⚙️</span><span>设置</span></div>
     </div>
 </div>
 <div class="toast" id="toast"></div>
-
 <script>
-const API=window.location.origin;let TOKEN=localStorage.getItem('prism_token')||'',userInfo={};
+const API=window.location.origin;let TOKEN=localStorage.getItem('prism_token')||'',userInfo={},chatBusy=false;
 function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
 setInterval(updateClock,1e3);updateClock();
 function showToast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.className='toast',2500)}
 async function apiFetch(p,o={}){const r=await fetch(API+p,{...o,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(o.headers||{})}});if(r.status===401||r.status===403){showToast('Token无效','error');doLogout();return null}return r.json()}
 async function doLogin(){const i=document.getElementById('tokenInput').value.trim();if(!i){showToast('请输入Token','error');return}TOKEN=i;try{const h=await apiFetch('/health');if(h&&h.status==='alive'){localStorage.setItem('prism_token',TOKEN);try{const p=JSON.parse(atob(TOKEN.split('.')[1]));userInfo=p;document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp();showToast('登录成功')}else{showToast('连接失败','error')}}catch(e){showToast('无法连接','error')}}
 function doLogout(){TOKEN='';localStorage.removeItem('prism_token');document.getElementById('loginScreen').style.display='flex';document.getElementById('mainApp').style.display='none'}
-function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='block';loadIndices();loadBonds()}
-function switchTab(n,el){document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active')}
-async function loadIndices(){const d=await apiFetch('/index');if(!d||!d.data)return;document.getElementById('indexGrid').innerHTML=d.data.map(i=>{const c=i['涨跌幅'],cls=c>0?'up':c<0?'down':'',a=c>0?'▲':c<0?'▼':'—';return`<div class="index-card"><div class="index-name">${i['名称']}</div><div class="index-value ${cls}">${i['现价'].toFixed(2)}</div><div class="index-change ${cls}">${a} ${Math.abs(c).toFixed(2)}%</div></div>`}).join('')}
+function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='block';loadIndices();loadBonds();checkBrain()}
+function switchTab(n,el){document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');document.getElementById('searchBar').style.display=n==='Chat'?'none':'block';if(n==='Chat')setTimeout(()=>document.getElementById('chatInput').focus(),100)}
+async function checkBrain(){try{const s=await apiFetch('/brain/');if(s&&s.status==='alive'){const r=s.router||{};document.getElementById('brainStatus').textContent='🟢 '+(r.available||0)+'模型可用';const info=document.getElementById('chatHeaderInfo');info.innerHTML=r.available>0?'<span class="dot-online"></span><span>'+(r.available||0)+'模型在线 · V4 Flash</span>':'<span class="dot-offline"></span><span>无LLM(需充值)</span>'}else{document.getElementById('brainStatus').textContent='🔴 离线'}}catch(e){document.getElementById('brainStatus').textContent='❌ 错误'}}
+function appendMsg(role,html){const d=document.getElementById('chatMessages');const m=document.createElement('div');m.className='chat-msg '+role;m.innerHTML=html;d.appendChild(m);d.scrollTop=d.scrollHeight}
+function showTyping(){const d=document.getElementById('chatMessages');const m=document.createElement('div');m.className='chat-typing';m.id='typingIndicator';m.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div><span>棱镜思考中...</span>';d.appendChild(m);d.scrollTop=d.scrollHeight}
+function hideTyping(){const t=document.getElementById('typingIndicator');if(t)t.remove()}
+function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+async function sendChat(){if(chatBusy)return;const input=document.getElementById('chatInput');const msg=input.value.trim();if(!msg)return;chatBusy=true;document.getElementById('chatSendBtn').disabled=true;input.value='';input.style.height='auto';appendMsg('user',escHtml(msg));showTyping();try{const r=await fetch(API+'/brain/chat',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify({message:msg,use_llm:true})});const d=await r.json();hideTyping();if(d.reply&&d.reply.startsWith('❌')){appendMsg('system','⚠️ '+escHtml(d.reply))}else if(d.reply){let meta='';if(d.model_used)meta+='🧠 '+d.model_used;if(d.cost_yuan!==undefined)meta+=' · ¥'+d.cost_yuan.toFixed(4);if(d.memories_used)meta+=' · '+d.memories_used+'条记忆';appendMsg('bot',escHtml(d.reply)+(meta?'<div class="msg-meta">'+meta+'</div>':''))}else{appendMsg('system','⚠️ 未收到回复')}}catch(e){hideTyping();appendMsg('system','❌ 连接失败: '+e.message)}chatBusy=false;document.getElementById('chatSendBtn').disabled=false;input.focus()}
+document.getElementById('chatInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'});
+document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}});
+async function loadIndices(){const d=await apiFetch('/index');if(!d||!d.data)return;document.getElementById('indexGrid').innerHTML=d.data.map(i=>{const c=i['涨跌幅'],cls=c>0?'up':c<0?'down':'',a=c>0?'▲':c<0?'▼':'—';return'<div class="index-card"><div class="index-name">'+i['名称']+'</div><div class="index-value '+cls+'">'+i['现价'].toFixed(2)+'</div><div class="index-change '+cls+'">'+a+' '+Math.abs(c).toFixed(2)+'%</div></div>'}).join('')}
 let searchTimer;document.getElementById('searchInput').addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchStock(e.target.value.trim()),500)});
-async function searchStock(q){if(!q)return;const c=document.getElementById('quoteContent');c.innerHTML='<div class="loading"><div class="spinner"></div>查询中...</div>';let code=q;if(!code.match(/^(sh|sz)/i)){if(code.startsWith('6'))code='sh'+code;else if(code.startsWith('0')||code.startsWith('3'))code='sz'+code}const d=await apiFetch('/realtime?codes='+code);if(!d)return;const s=d.data||[];if(!s.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>未找到该股票</div></div>';return}c.innerHTML=s.map(x=>{const ch=x['涨跌幅'],cls=ch>0?'up':ch<0?'down':'';return`<div class="quote-card"><div class="quote-header"><div><div class="quote-name">${x['名称']}</div><div class="quote-code">${x['代码']}</div></div><div class="quote-price ${cls}">${x['现价'].toFixed(2)}</div></div><div class="quote-details"><div class="quote-detail-item"><div class="quote-detail-label">涨跌幅</div><div class="quote-detail-value ${cls}">${ch>0?'+':''}${ch.toFixed(2)}%</div></div><div class="quote-detail-item"><div class="quote-detail-label">涨跌额</div><div class="quote-detail-value ${cls}">${x['涨跌额'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">今开</div><div class="quote-detail-value">${x['今开'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">最高</div><div class="quote-detail-value">${x['最高'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">最低</div><div class="quote-detail-value">${x['最低'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">昨收</div><div class="quote-detail-value">${x['昨收'].toFixed(2)}</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交量</div><div class="quote-detail-value">${fmtVol(x['成交量'])}</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交额</div><div class="quote-detail-value">${fmtAmt(x['成交额'])}</div></div><div class="quote-detail-item"><div class="quote-detail-label">换手率</div><div class="quote-detail-value">${x['换手率'].toFixed(2)}%</div></div></div></div>`}).join('')}
+async function searchStock(q){if(!q)return;const c=document.getElementById('quoteContent');c.innerHTML='<div class="loading"><div class="spinner"></div>查询中...</div>';let code=q;if(!code.match(/^(sh|sz)/i)){if(code.startsWith('6'))code='sh'+code;else if(code.startsWith('0')||code.startsWith('3'))code='sz'+code}const d=await apiFetch('/realtime?codes='+code);if(!d)return;const s=d.data||[];if(!s.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>未找到该股票</div></div>';return}c.innerHTML=s.map(x=>{const ch=x['涨跌幅'],cls=ch>0?'up':ch<0?'down':'';return'<div class="quote-card"><div class="quote-header"><div><div class="quote-name">'+x['名称']+'</div><div class="quote-code">'+x['代码']+'</div></div><div class="quote-price '+cls+'">'+x['现价'].toFixed(2)+'</div></div><div class="quote-details"><div class="quote-detail-item"><div class="quote-detail-label">涨跌幅</div><div class="quote-detail-value '+cls+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</div></div><div class="quote-detail-item"><div class="quote-detail-label">涨跌额</div><div class="quote-detail-value '+cls+'">'+x['涨跌额'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">今开</div><div class="quote-detail-value">'+x['今开'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">最高</div><div class="quote-detail-value">'+x['最高'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">最低</div><div class="quote-detail-value">'+x['最低'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">昨收</div><div class="quote-detail-value">'+x['昨收'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交量</div><div class="quote-detail-value">'+fmtVol(x['成交量'])+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交额</div><div class="quote-detail-value">'+fmtAmt(x['成交额'])+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">换手率</div><div class="quote-detail-value">'+x['换手率'].toFixed(2)+'%</div></div></div></div>'}).join('')}
 function fmtVol(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(1)+'万':v+''}
 function fmtAmt(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(1)+'万':v.toFixed(0)}
-async function loadBonds(){const d=await apiFetch('/bond/double-low?top=30');if(!d)return;const c=document.getElementById('bondContent'),b=d.data||[];if(!b.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无数据</div></div>';return}let h='<table class="bond-table"><thead><tr><th>#</th><th>名称</th><th>双低</th><th>价格</th><th>评级</th></tr></thead><tbody>';b.forEach((x,i)=>{const r=x['评级']||'';let rc='bond-rating';if(r==='AAA')rc+=' aaa';else if(r==='AA'||r==='AA+')rc+=' aa';h+=`<tr><td class="bond-rank">${i+1}</td><td>${x['名称']}</td><td>${x['双低值']?x['双低值'].toFixed(2):'-'}</td><td>${x['价格']?x['价格'].toFixed(2):'-'}</td><td><span class="${rc}">${r}</span></td></tr>`});h+='</tbody></table>';c.innerHTML=h}
+async function loadBonds(){const d=await apiFetch('/bond/double-low?top=30');if(!d)return;const c=document.getElementById('bondContent'),b=d.data||[];if(!b.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无数据</div></div>';return}let h='<table class="bond-table"><thead><tr><th>#</th><th>名称</th><th>双低</th><th>价格</th><th>评级</th></tr></thead><tbody>';b.forEach((x,i)=>{const r=x['评级']||'';let rc='bond-rating';if(r==='AAA')rc+=' aaa';else if(r==='AA'||r==='AA+')rc+=' aa';h+='<tr><td class="bond-rank">'+(i+1)+'</td><td>'+x['名称']+'</td><td>'+(x['双低值']?x['双低值'].toFixed(2):'-')+'</td><td>'+(x['价格']?x['价格'].toFixed(2):'-')+'</td><td><span class="'+rc+'">'+r+'</span></td></tr>'});h+='</tbody></table>';c.innerHTML=h}
 if(TOKEN){apiFetch('/health').then(h=>{if(h&&h.status==='alive'){try{const p=JSON.parse(atob(TOKEN.split('.')[1]));document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp()}else{localStorage.removeItem('prism_token');TOKEN=''}}).catch(()=>{localStorage.removeItem('prism_token');TOKEN=''})}
 </script>
 </body>

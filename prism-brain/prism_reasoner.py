@@ -46,22 +46,42 @@ class ModelConfig:
 
 
 PRESET_MODELS = {
-    "deepseek-v3": ModelConfig(
-        name="deepseek-v3", provider="DeepSeek",
+    # === DeepSeek V4 系列（主力，75%永久折扣）===
+    "deepseek-v4-flash": ModelConfig(
+        name="deepseek-v4-flash", provider="DeepSeek",
         base_url="https://api.deepseek.com/v1",
         model_id="deepseek-chat",
         api_key_env="DEEPSEEK_API_KEY",
-        cost_per_million_input=1.0, cost_per_million_output=2.0,
+        cost_per_million_input=0.7, cost_per_million_output=1.4,
+        max_tokens=8192,
         category="general", priority=10
+    ),
+    "deepseek-v4-pro": ModelConfig(
+        name="deepseek-v4-pro", provider="DeepSeek",
+        base_url="https://api.deepseek.com/v1",
+        model_id="deepseek-reasoner",
+        api_key_env="DEEPSEEK_API_KEY",
+        cost_per_million_input=3.0, cost_per_million_output=6.0,
+        max_tokens=8192, temperature=0.6,
+        category="reasoning", priority=10
+    ),
+    # === DeepSeek V3.2 / R1（备用）===
+    "deepseek-v3.2": ModelConfig(
+        name="deepseek-v3.2", provider="DeepSeek",
+        base_url="https://api.deepseek.com/v1",
+        model_id="deepseek-chat",
+        api_key_env="DEEPSEEK_API_KEY",
+        cost_per_million_input=1.6, cost_per_million_output=2.5,
+        category="general", priority=7
     ),
     "deepseek-r1": ModelConfig(
         name="deepseek-r1", provider="DeepSeek",
         base_url="https://api.deepseek.com/v1",
         model_id="deepseek-reasoner",
         api_key_env="DEEPSEEK_API_KEY",
-        cost_per_million_input=4.0, cost_per_million_output=16.0,
+        cost_per_million_input=3.6, cost_per_million_output=15.5,
         max_tokens=8192, temperature=0.6,
-        category="reasoning", priority=10
+        category="reasoning", priority=7
     ),
     "siliconflow-qwen3": ModelConfig(
         name="siliconflow-qwen3", provider="硅基流动",
