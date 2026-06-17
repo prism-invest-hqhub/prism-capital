@@ -59,7 +59,7 @@ logger = logging.getLogger("prism-api")
 app = FastAPI(
     title="棱镜行情数据 API",
     description="Prism Market Data — 三维度，一个结论。A股/可转债/ETF/K线 quant-grade data.",
-    version="3.1.0",
+    version="3.2.0",
 )
 
 app.add_middleware(
@@ -199,7 +199,7 @@ def root():
     """API根路径"""
     return {
         "name": "棱镜行情数据 API",
-        "version": "3.1.0",
+        "version": "3.2.0",
         "identity": "prism-invest",
         "endpoints": {
             "realtime": "/realtime?codes=sh600519,sz000001",
@@ -397,7 +397,7 @@ def api_config():
     config = get_config()
     return {
         "config": config,
-        "version": "3.1.0",
+        "version": "3.2.0",
         "note": "这是运行时配置，可通过环境变量覆盖"
     }
 
@@ -431,7 +431,7 @@ def daily_brief(authorization: str = Header(None)):
     
     result = {
         "date": datetime.datetime.now().strftime("%Y-%m-%d"),
-        "version": "3.1.0",
+        "version": "3.2.0",
     }
     
     # 1. 指数行情
@@ -494,7 +494,7 @@ def health():
     overall = "healthy"
     
     # 1. API进程
-    checks["api"] = {"status": "ok", "version": "3.1.0", "port": 8900}
+    checks["api"] = {"status": "ok", "version": "3.2.0", "port": 8900}
     
     # 2. Brain记忆
     try:
@@ -559,7 +559,7 @@ def health():
     return {
         "status": overall,
         "identity": "prism-invest",
-        "version": "3.1.0",
+        "version": "3.2.0",
         "timestamp": datetime.datetime.now().isoformat(),
         "checks": checks
     }
