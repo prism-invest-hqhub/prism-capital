@@ -362,7 +362,8 @@ async function loadBrief(){
 }
 
 if(TOKEN){apiFetch('/health').then(h=>{if(h&&h.status==='alive'){try{const p=JSON.parse(atob(TOKEN.split('.')[1]));document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp()}else{localStorage.removeItem('prism_token');TOKEN=''}}).catch(()=>{localStorage.removeItem('prism_token');TOKEN=''})}
+
+async function checkEvolution(){try{const s=await apiFetch('/brain/backtest');if(s){const acc=s.overall_accuracy;const types=s.total_types||0;document.getElementById('evoStatus').textContent=acc?('🟢 准确率'+Math.round(acc*100)+'% · '+types+'类决策'):'🟡 无数据'}else{document.getElementById('evoStatus').textContent='🔴 离线'}}catch(e){document.getElementById('evoStatus').textContent='❌ 错误'}}
 </script>
 </body>
 </html>
-async function checkEvolution(){try{const s=await apiFetch('/brain/backtest');if(s){const acc=s.overall_accuracy;const types=s.total_types||0;document.getElementById('evoStatus').textContent=acc?('🟢 准确率'+Math.round(acc*100)+'% · '+types+'类决策'):'🟡 无数据'}else{document.getElementById('evoStatus').textContent='🔴 离线'}}catch(e){document.getElementById('evoStatus').textContent='❌ 错误'}}
