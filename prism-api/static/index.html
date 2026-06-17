@@ -217,6 +217,7 @@
         <div class="settings-item"><span class="settings-label">权限</span><span class="settings-value" id="userTier">-</span></div>
         <div class="settings-item"><span class="settings-label">API</span><span class="settings-value" id="apiStatus">检测中...</span></div>
         <div class="settings-item"><span class="settings-label">Brain</span><span class="settings-value" id="brainStatus">-</span></div>
+        <div class="settings-item"><span class="settings-label">Evolution</span><span class="settings-value" id="evoStatus">-</span></div>
         <div class="settings-item"><span class="settings-label">版本</span><span class="settings-value">Prism v3.2.0</span></div>
         <button class="logout-btn" onclick="doLogout()">退出登录</button>
     </div>
@@ -239,7 +240,7 @@ function showToast(m,t='success'){const e=document.getElementById('toast');e.tex
 async function apiFetch(p,o={}){const r=await fetch(API+p,{...o,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(o.headers||{})}});if(r.status===401||r.status===403){showToast('Token无效','error');doLogout();return null}return r.json()}
 async function doLogin(){const i=document.getElementById('tokenInput').value.trim();if(!i){showToast('请输入Token','error');return}TOKEN=i;try{const h=await apiFetch('/health');if(h&&h.status==='alive'){localStorage.setItem('prism_token',TOKEN);try{const p=JSON.parse(atob(TOKEN.split('.')[1]));userInfo=p;document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp();showToast('登录成功')}else{showToast('连接失败','error')}}catch(e){showToast('无法连接','error')}}
 function doLogout(){TOKEN='';localStorage.removeItem('prism_token');document.getElementById('loginScreen').style.display='flex';document.getElementById('mainApp').style.display='none'}
-function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='block';loadIndices();loadBonds();checkBrain()}
+function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='block';loadIndices();loadBonds();checkBrain();checkEvolution()}
 function switchTab(n,el){currentTab=n;document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');const noSearchTabs=['Chat','Brief','Settings'];document.getElementById('searchBar').style.display=noSearchTabs.includes(n)?'none':'block';const si=document.getElementById('searchInput');if(n==='Analyze'){si.placeholder='输入股票代码查看技术分析...'}else if(n==='Quote'){si.placeholder='输入股票代码或名称...'}else if(n==='Index'||n==='Bond'){si.placeholder='输入股票代码或名称...'}if(n==='Chat')setTimeout(()=>document.getElementById('chatInput').focus(),100);if(n==='Brief')loadBrief()}
 async function checkBrain(){try{const s=await apiFetch('/brain/');if(s&&s.status==='alive'){const r=s.router||{};document.getElementById('brainStatus').textContent='🟢 '+(r.available||0)+'模型可用';const info=document.getElementById('chatHeaderInfo');info.innerHTML=r.available>0?'<span class="dot-online"></span><span>'+(r.available||0)+'模型在线 · V4 Flash</span>':'<span class="dot-offline"></span><span>无LLM(需充值)</span>'}else{document.getElementById('brainStatus').textContent='🔴 离线'}}catch(e){document.getElementById('brainStatus').textContent='❌ 错误'}}
 function appendMsg(role,html){const d=document.getElementById('chatMessages');const m=document.createElement('div');m.className='chat-msg '+role;m.innerHTML=html;d.appendChild(m);d.scrollTop=d.scrollHeight}
@@ -364,3 +365,4 @@ if(TOKEN){apiFetch('/health').then(h=>{if(h&&h.status==='alive'){try{const p=JSO
 </script>
 </body>
 </html>
+async function checkEvolution(){try{const s=await apiFetch('/brain/backtest');if(s){const acc=s.overall_accuracy;const types=s.total_types||0;document.getElementById('evoStatus').textContent=acc?('🟢 准确率'+Math.round(acc*100)+'% · '+types+'类决策'):'🟡 无数据'}else{document.getElementById('evoStatus').textContent='🔴 离线'}}catch(e){document.getElementById('evoStatus').textContent='❌ 错误'}}
