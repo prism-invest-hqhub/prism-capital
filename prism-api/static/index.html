@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="/icon-192.png">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        :root{--bg:#0a0a1a;--card:#12122a;--card-hover:#1a1a3a;--border:#2a2a4a;--primary:#6c5ce7;--primary-light:#a29bfe;--accent:#00cec9;--red:#ff6b6b;--green:#51cf66;--text:#e8e8f0;--text-dim:#8888aa;--text-dimmer:#555577;--radius:16px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+        :root{--bg:#0a0a1a;--card:#12122a;--card-hover:#1a1a3a;--border:#2a2a4a;--primary:#6c5ce7;--primary-light:#a29bfe;--accent:#00cec9;--red:#ff6b6b;--green:#51cf66;--yellow:#ffd43b;--text:#e8e8f0;--text-dim:#8888aa;--text-dimmer:#555577;--radius:16px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
         body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
         .login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;background:radial-gradient(ellipse at top,#1a1a4a 0%,var(--bg) 70%)}
         .login-logo{width:100px;height:100px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:24px;box-shadow:0 8px 32px rgba(108,92,231,0.3)}
@@ -33,9 +33,9 @@
         .search-input:focus{border-color:var(--primary)}
         .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dimmer);font-size:18px}
         .tab-bar{position:fixed;bottom:0;left:0;right:0;height:calc(80px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:rgba(10,10,26,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:space-around;align-items:center;border-top:1px solid rgba(42,42,74,0.5);z-index:100}
-        .tab-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-dimmer);font-size:11px;cursor:pointer;padding:8px 12px;-webkit-tap-highlight-color:transparent}
+        .tab-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-dimmer);font-size:10px;cursor:pointer;padding:6px 8px;-webkit-tap-highlight-color:transparent}
         .tab-item.active{color:var(--primary-light)}
-        .tab-icon{font-size:24px}
+        .tab-icon{font-size:22px}
         .section{display:none;padding:0 16px}
         .section.active{display:block}
         .section-title{font-size:18px;font-weight:700;margin:20px 0 12px}
@@ -56,13 +56,37 @@
         .quote-detail-label{font-size:11px;color:var(--text-dimmer);margin-bottom:4px}
         .quote-detail-value{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
         .bond-table{width:100%;border-collapse:collapse}
-        .bond-table th{font-size:11px;color:var(--text-dimmer);text-align:left;padding:8px 6px;border-bottom:1px solid var(--border);font-weight:500;position:sticky;top:0;background:var(--bg)}
-        .bond-table td{font-size:13px;padding:10px 6px;border-bottom:1px solid rgba(42,42,74,0.3);font-variant-numeric:tabular-nums}
+        .bond-table th{font-size:11px;color:var(--text-dimmer);text-align:left;padding:8px 4px;border-bottom:1px solid var(--border);font-weight:500;position:sticky;top:0;background:var(--bg)}
+        .bond-table td{font-size:13px;padding:10px 4px;border-bottom:1px solid rgba(42,42,74,0.3);font-variant-numeric:tabular-nums}
         .bond-table tr:active{background:var(--card-hover)}
-        .bond-rank{color:var(--primary-light);font-weight:700}
-        .bond-rating{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(108,92,231,0.15);color:var(--primary-light)}
+        .bond-rank{color:var(--primary-light);font-weight:700;width:30px}
+        .bond-name{width:70px}
+        .bond-rating{display:inline-block;padding:2px 6px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(108,92,231,0.15);color:var(--primary-light)}
         .bond-rating.aaa{background:rgba(0,206,201,0.15);color:var(--accent)}
         .bond-rating.aa{background:rgba(108,92,231,0.15);color:var(--primary-light)}
+        .premium-green{color:var(--green)}
+        .premium-yellow{color:var(--yellow)}
+        .premium-red{color:var(--red)}
+        .analyze-card{background:var(--card);border-radius:var(--radius);padding:16px;border:1px solid var(--border);margin-bottom:12px}
+        .analyze-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .analyze-title{font-size:18px;font-weight:700}
+        .analyze-code{font-size:13px;color:var(--text-dim)}
+        .analyze-section{margin-bottom:16px}
+        .analyze-section-title{font-size:13px;color:var(--text-dim);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+        .analyze-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(42,42,74,0.3)}
+        .analyze-label{font-size:13px;color:var(--text-dimmer)}
+        .analyze-value{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+        .rsi-overbought{color:var(--red)}
+        .rsi-oversold{color:var(--green)}
+        .rsi-neutral{color:var(--text)}
+        .macd-up{color:var(--green)}
+        .macd-down{color:var(--red)}
+        .boll-up{color:var(--red)}
+        .boll-mid{color:var(--text)}
+        .boll-low{color:var(--green)}
+        .position-high{color:var(--red)}
+        .position-mid{color:var(--yellow)}
+        .position-low{color:var(--green)}
         .settings-item{background:var(--card);border-radius:var(--radius);padding:16px 20px;border:1px solid var(--border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
         .settings-label{font-size:15px}
         .settings-value{color:var(--text-dim);font-size:13px}
@@ -137,6 +161,10 @@
         <button class="refresh-btn" onclick="loadBonds()">🔄 刷新</button>
         <div id="bondContent"><div class="loading"><div class="spinner"></div>加载中...</div></div>
     </div>
+    <div class="section" id="sectionAnalyze">
+        <div class="section-title">📉 技术分析</div>
+        <div id="analyzeContent"><div class="empty-state"><div class="empty-icon">📊</div><div>输入股票代码查看技术分析</div><div style="margin-top:8px;font-size:12px;color:var(--text-dimmer)">在顶部搜索框输入股票代码</div></div></div>
+    </div>
     <div class="section" id="sectionChat">
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages">
@@ -154,20 +182,21 @@
         <div class="settings-item"><span class="settings-label">权限</span><span class="settings-value" id="userTier">-</span></div>
         <div class="settings-item"><span class="settings-label">API</span><span class="settings-value" id="apiStatus">检测中...</span></div>
         <div class="settings-item"><span class="settings-label">Brain</span><span class="settings-value" id="brainStatus">-</span></div>
-        <div class="settings-item"><span class="settings-label">版本</span><span class="settings-value">Prism v2.0</span></div>
+        <div class="settings-item"><span class="settings-label">版本</span><span class="settings-value">Prism v3.1.0</span></div>
         <button class="logout-btn" onclick="doLogout()">退出登录</button>
     </div>
     <div class="tab-bar">
         <div class="tab-item active" onclick="switchTab('Index',this)"><span class="tab-icon">📊</span><span>指数</span></div>
         <div class="tab-item" onclick="switchTab('Quote',this)"><span class="tab-icon">📈</span><span>行情</span></div>
         <div class="tab-item" onclick="switchTab('Bond',this)"><span class="tab-icon">💰</span><span>转债</span></div>
+        <div class="tab-item" onclick="switchTab('Analyze',this)"><span class="tab-icon">📉</span><span>分析</span></div>
         <div class="tab-item" onclick="switchTab('Chat',this)"><span class="tab-icon">💬</span><span>聊天</span></div>
         <div class="tab-item" onclick="switchTab('Settings',this)"><span class="tab-icon">⚙️</span><span>设置</span></div>
     </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
-const API=window.location.origin;let TOKEN=localStorage.getItem('prism_token')||'',userInfo={},chatBusy=false;
+const API=window.location.origin;let TOKEN=localStorage.getItem('prism_token')||'',userInfo={},chatBusy=false,currentTab='Index';
 function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
 setInterval(updateClock,1e3);updateClock();
 function showToast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.className='toast',2500)}
@@ -175,7 +204,7 @@ async function apiFetch(p,o={}){const r=await fetch(API+p,{...o,headers:{'Author
 async function doLogin(){const i=document.getElementById('tokenInput').value.trim();if(!i){showToast('请输入Token','error');return}TOKEN=i;try{const h=await apiFetch('/health');if(h&&h.status==='alive'){localStorage.setItem('prism_token',TOKEN);try{const p=JSON.parse(atob(TOKEN.split('.')[1]));userInfo=p;document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp();showToast('登录成功')}else{showToast('连接失败','error')}}catch(e){showToast('无法连接','error')}}
 function doLogout(){TOKEN='';localStorage.removeItem('prism_token');document.getElementById('loginScreen').style.display='flex';document.getElementById('mainApp').style.display='none'}
 function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='block';loadIndices();loadBonds();checkBrain()}
-function switchTab(n,el){document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');document.getElementById('searchBar').style.display=n==='Chat'?'none':'block';if(n==='Chat')setTimeout(()=>document.getElementById('chatInput').focus(),100)}
+function switchTab(n,el){currentTab=n;document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');document.getElementById('searchBar').style.display=n==='Chat'?'none':'block';const si=document.getElementById('searchInput');if(n==='Analyze'){si.placeholder='输入股票代码查看技术分析...'}else if(n==='Quote'){si.placeholder='输入股票代码或名称...'}else if(n==='Index'||n==='Bond'){si.placeholder='输入股票代码或名称...'}if(n==='Chat')setTimeout(()=>document.getElementById('chatInput').focus(),100)}
 async function checkBrain(){try{const s=await apiFetch('/brain/');if(s&&s.status==='alive'){const r=s.router||{};document.getElementById('brainStatus').textContent='🟢 '+(r.available||0)+'模型可用';const info=document.getElementById('chatHeaderInfo');info.innerHTML=r.available>0?'<span class="dot-online"></span><span>'+(r.available||0)+'模型在线 · V4 Flash</span>':'<span class="dot-offline"></span><span>无LLM(需充值)</span>'}else{document.getElementById('brainStatus').textContent='🔴 离线'}}catch(e){document.getElementById('brainStatus').textContent='❌ 错误'}}
 function appendMsg(role,html){const d=document.getElementById('chatMessages');const m=document.createElement('div');m.className='chat-msg '+role;m.innerHTML=html;d.appendChild(m);d.scrollTop=d.scrollHeight}
 function showTyping(){const d=document.getElementById('chatMessages');const m=document.createElement('div');m.className='chat-typing';m.id='typingIndicator';m.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div><span>棱镜思考中...</span>';d.appendChild(m);d.scrollTop=d.scrollHeight}
@@ -186,10 +215,12 @@ document.getElementById('chatInput').addEventListener('input',function(){this.st
 document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}});
 async function loadIndices(){const d=await apiFetch('/index');if(!d||!d.data)return;document.getElementById('indexGrid').innerHTML=d.data.map(i=>{const c=i['涨跌幅'],cls=c>0?'up':c<0?'down':'',a=c>0?'▲':c<0?'▼':'—';return'<div class="index-card"><div class="index-name">'+i['名称']+'</div><div class="index-value '+cls+'">'+i['现价'].toFixed(2)+'</div><div class="index-change '+cls+'">'+a+' '+Math.abs(c).toFixed(2)+'%</div></div>'}).join('')}
 let searchTimer;document.getElementById('searchInput').addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchStock(e.target.value.trim()),500)});
-async function searchStock(q){if(!q)return;const c=document.getElementById('quoteContent');c.innerHTML='<div class="loading"><div class="spinner"></div>查询中...</div>';let code=q;if(!code.match(/^(sh|sz)/i)){if(code.startsWith('6'))code='sh'+code;else if(code.startsWith('0')||code.startsWith('3'))code='sz'+code}const d=await apiFetch('/realtime?codes='+code);if(!d)return;const s=d.data||[];if(!s.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>未找到该股票</div></div>';return}c.innerHTML=s.map(x=>{const ch=x['涨跌幅'],cls=ch>0?'up':ch<0?'down':'';return'<div class="quote-card"><div class="quote-header"><div><div class="quote-name">'+x['名称']+'</div><div class="quote-code">'+x['代码']+'</div></div><div class="quote-price '+cls+'">'+x['现价'].toFixed(2)+'</div></div><div class="quote-details"><div class="quote-detail-item"><div class="quote-detail-label">涨跌幅</div><div class="quote-detail-value '+cls+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</div></div><div class="quote-detail-item"><div class="quote-detail-label">涨跌额</div><div class="quote-detail-value '+cls+'">'+x['涨跌额'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">今开</div><div class="quote-detail-value">'+x['今开'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">最高</div><div class="quote-detail-value">'+x['最高'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">最低</div><div class="quote-detail-value">'+x['最低'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">昨收</div><div class="quote-detail-value">'+x['昨收'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交量</div><div class="quote-detail-value">'+fmtVol(x['成交量'])+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交额</div><div class="quote-detail-value">'+fmtAmt(x['成交额'])+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">换手率</div><div class="quote-detail-value">'+x['换手率'].toFixed(2)+'%</div></div></div></div>'}).join('')}
+async function searchStock(q){if(!q)return;let code=q;if(!code.match(/^(sh|sz)/i)){if(code.startsWith('6'))code='sh'+code;else if(code.startsWith('0')||code.startsWith('3'))code='sz'+code}const analyzeTab=document.querySelector('[onclick*="Analyze"]');if(currentTab==='Index'||currentTab==='Bond'){document.getElementById('quoteContent').innerHTML='<div class="loading"><div class="spinner"></div>查询中...</div>';switchTab('Quote',document.querySelector('[onclick*="Quote"]'));}const d=await apiFetch('/realtime?codes='+code);if(!d)return;const s=d.data||[];if(!s.length){document.getElementById('quoteContent').innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>未找到该股票</div></div>';return}document.getElementById('quoteContent').innerHTML=s.map(x=>{const ch=x['涨跌幅'],cls=ch>0?'up':ch<0?'down':'';return'<div class="quote-card"><div class="quote-header"><div><div class="quote-name">'+x['名称']+'</div><div class="quote-code">'+x['代码']+'</div></div><div class="quote-price '+cls+'">'+x['现价'].toFixed(2)+'</div></div><div class="quote-details"><div class="quote-detail-item"><div class="quote-detail-label">涨跌幅</div><div class="quote-detail-value '+cls+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</div></div><div class="quote-detail-item"><div class="quote-detail-label">涨跌额</div><div class="quote-detail-value '+cls+'">'+x['涨跌额'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">今开</div><div class="quote-detail-value">'+x['今开'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">最高</div><div class="quote-detail-value">'+x['最高'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">最低</div><div class="quote-detail-value">'+x['最低'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">昨收</div><div class="quote-detail-value">'+x['昨收'].toFixed(2)+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交量</div><div class="quote-detail-value">'+fmtVol(x['成交量'])+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">成交额</div><div class="quote-detail-value">'+fmtAmt(x['成交额'])+'</div></div><div class="quote-detail-item"><div class="quote-detail-label">换手率</div><div class="quote-detail-value">'+x['换手率'].toFixed(2)+'%</div></div></div></div>'}).join('');loadAnalyze(q)}
+async function loadAnalyze(q){if(!q)return;const c=document.getElementById('analyzeContent');c.innerHTML='<div class="loading"><div class="spinner"></div>分析中...</div>';let code=q;if(!code.match(/^(sh|sz)/i)){if(code.startsWith('6'))code='sh'+code;else if(code.startsWith('0')||code.startsWith('3'))code='sz'+code}const d=await apiFetch('/analyze?code='+code);if(!d){c.innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>分析加载失败</div></div>';return}const data=d.data||d;if(data.error){c.innerHTML='<div class="empty-state"><div class="empty-icon">😕</div><div>'+escHtml(data.error)+'</div></div>';return}const ma=data.MA||{};const macd=data.MACD||{};const rsi=data.RSI||{};const boll=data.BOLL||{};const price=data.price||data.close||0;let rsiCls='rsi-neutral',rsiState='';if(rsi.value>70){rsiCls='rsi-overbought';rsiState='超买'}else if(rsi.value<30){rsiCls='rsi-oversold';rsiState='超卖'}else{rsiState='中性'}let macdCls=macd.trend==='up'||macd.histogram>0?'macd-up':'macd-down';let macdTrend=macd.trend==='up'?'金叉/多头':'死叉/空头';let bollPos='中轨附近',bollCls='boll-mid';if(price>boll.upper)bollCls='position-high',bollPos='突破上轨';else if(price<boll.lower)bollCls='position-low',bollPos='跌破下轨';else if(price>boll.mid)bollCls='position-mid',bollPos='中上轨之间';else bollPos='中下轨之间';c.innerHTML='<div class="analyze-card"><div class="analyze-header"><div><div class="analyze-title">'+escHtml(data.name||data.code||code)+'</div><div class="analyze-code">'+escHtml(code.toUpperCase())+'</div></div></div><div class="analyze-section"><div class="analyze-section-title">📊 移动均线 MA</div><div class="analyze-row"><span class="analyze-label">MA5</span><span class="analyze-value">'+(ma.MA5?ma.MA5.toFixed(2):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">MA10</span><span class="analyze-value">'+(ma.MA10?ma.MA10.toFixed(2):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">MA20</span><span class="analyze-value">'+(ma.MA20?ma.MA20.toFixed(2):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">MA60</span><span class="analyze-value">'+(ma.MA60?ma.MA60.toFixed(2):'-')+'</span></div></div><div class="analyze-section"><div class="analyze-section-title">📉 MACD指标</div><div class="analyze-row"><span class="analyze-label">DIF</span><span class="analyze-value '+macdCls+'">'+(macd.dif?macd.dif.toFixed(4):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">DEA</span><span class="analyze-value '+macdCls+'">'+(macd.dea?macd.dea.toFixed(4):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">MACD柱</span><span class="analyze-value '+macdCls+'">'+(macd.histogram?macd.histogram.toFixed(4):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">趋势信号</span><span class="analyze-value '+macdCls+'">'+macdTrend+'</span></div></div><div class="analyze-section"><div class="analyze-section-title">📈 RSI相对强弱</div><div class="analyze-row"><span class="analyze-label">RSI(14)</span><span class="analyze-value '+rsiCls+'">'+(rsi.value?rsi.value.toFixed(2):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">状态</span><span class="analyze-value '+rsiCls+'">'+rsiState+'</span></div></div><div class="analyze-section"><div class="analyze-section-title">🔵 布林带 BOLL</div><div class="analyze-row"><span class="analyze-label">上轨</span><span class="analyze-value boll-up">'+(boll.upper?boll.upper.toFixed(2):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">中轨</span><span class="analyze-value boll-mid">'+(boll.mid?boll.mid.toFixed(2):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">下轨</span><span class="analyze-value boll-low">'+(boll.lower?boll.lower.toFixed(2):'-')+'</span></div><div class="analyze-row"><span class="analyze-label">当前位置</span><span class="analyze-value '+bollCls+'">'+bollPos+'</span></div></div></div>'}
 function fmtVol(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(1)+'万':v+''}
 function fmtAmt(v){return v>=1e8?(v/1e8).toFixed(1)+'亿':v>=1e4?(v/1e4).toFixed(1)+'万':v.toFixed(0)}
-async function loadBonds(){const d=await apiFetch('/bond/double-low?top=30');if(!d)return;const c=document.getElementById('bondContent'),b=d.data||[];if(!b.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无数据</div></div>';return}let h='<table class="bond-table"><thead><tr><th>#</th><th>名称</th><th>双低</th><th>价格</th><th>评级</th></tr></thead><tbody>';b.forEach((x,i)=>{const r=x['评级']||'';let rc='bond-rating';if(r==='AAA')rc+=' aaa';else if(r==='AA'||r==='AA+')rc+=' aa';h+='<tr><td class="bond-rank">'+(i+1)+'</td><td>'+x['名称']+'</td><td>'+(x['双低值']?x['双低值'].toFixed(2):'-')+'</td><td>'+(x['价格']?x['价格'].toFixed(2):'-')+'</td><td><span class="'+rc+'">'+r+'</span></td></tr>'});h+='</tbody></table>';c.innerHTML=h}
+function getPremiumClass(p){if(p===undefined||p===null)return'';if(p<20)return'premium-green';if(p<=40)return'premium-yellow';return'premium-red'}
+async function loadBonds(){const d=await apiFetch('/bond/double-low?top=30');if(!d)return;const c=document.getElementById('bondContent'),b=d.data||[];if(!b.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>暂无数据</div></div>';return}let h='<table class="bond-table"><thead><tr><th>#</th><th>名称</th><th>价格</th><th>双低</th><th>溢价率</th><th>成交额</th><th>评级</th></tr></thead><tbody>';b.forEach((x,i)=>{const r=x['评级']||'';let rc='bond-rating';if(r==='AAA')rc+=' aaa';else if(r==='AA'||r==='AA+')rc+=' aa';const premium=x['溢价率'];const pc=getPremiumClass(premium);h+='<tr><td class="bond-rank">'+(i+1)+'</td><td class="bond-name">'+escHtml(x['名称']||'')+'</td><td>'+(x['价格']?x['价格'].toFixed(2):'-')+'</td><td>'+(x['双低值']?x['双低值'].toFixed(2):'-')+'</td><td class="'+pc+'">'+(premium!==undefined&&premium!==null?premium.toFixed(2)+'%':'-')+'</td><td>'+fmtAmt(x['成交额']||0)+'</td><td><span class="'+rc+'">'+escHtml(r)+'</span></td></tr>'});h+='</tbody></table>';c.innerHTML=h}
 if(TOKEN){apiFetch('/health').then(h=>{if(h&&h.status==='alive'){try{const p=JSON.parse(atob(TOKEN.split('.')[1]));document.getElementById('userIdentity').textContent=p.sub||'-';document.getElementById('userTier').textContent=(p.tier||p.role||'-').toUpperCase()}catch(e){}document.getElementById('apiStatus').textContent='🟢 在线';enterApp()}else{localStorage.removeItem('prism_token');TOKEN=''}}).catch(()=>{localStorage.removeItem('prism_token');TOKEN=''})}
 </script>
 </body>

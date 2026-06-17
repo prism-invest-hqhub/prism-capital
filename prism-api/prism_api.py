@@ -206,6 +206,12 @@ def root():
             "index": "/index",
             "kline": "/kline?code=sh600519&period=daily",
             "bond": "/bond/double-low",
+            "analyze": "/analyze?code=sh600519",
+            "fundflow": "/fundflow?code=sh600519",
+            "search": "/search?keyword=茅台",
+            "wiki": "/wiki",
+            "brain": "/brain/stats | /brain/query | /brain/decide",
+            "evolution": "/evolution/log | /evolution/feedback",
             "config": "/config",
             "docs": "/docs",
             "health": "/health"
